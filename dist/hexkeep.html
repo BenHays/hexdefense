@@ -1,0 +1,1432 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Hexkeep</title>
+<style>
+html,body{margin:0;height:100%;background:#0b0e14;color:#e8e6df;font:14px system-ui,sans-serif;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
+#app{display:flex;flex-direction:column;height:100%}
+#hud{display:flex;flex-wrap:wrap;gap:5px 12px;align-items:center;padding:6px 10px;background:linear-gradient(#1d2331,#141923);border-bottom:1px solid #2f3850;box-shadow:0 2px 8px #0008;z-index:3}
+.logo{font-weight:800;letter-spacing:2px;color:#f1d98a;text-shadow:0 1px 0 #000}
+.rs{display:inline-flex;align-items:center;gap:4px;padding:2px 8px 2px 4px;border-radius:12px;background:#0b0e1488;border:1px solid #2a3248}
+.rs b{font-weight:700;min-width:12px;font-variant-numeric:tabular-nums}
+.rs img{display:block}
+.rs .lb{font-size:11px;opacity:.7;text-transform:uppercase;letter-spacing:.5px}
+.g{color:#f6d24f}.w{color:#d9a25c}.s{color:#c3cad6}.h{color:#ff8a7a}.c{color:#c9a0ff}.wvc{color:#cfe0ff}
+button{background:linear-gradient(#3d4a70,#2a3452);color:#eee;border:1px solid #5a6a9a;border-radius:9px;padding:7px 12px;font:inherit;cursor:pointer;box-shadow:inset 0 1px 0 #ffffff26,0 2px 4px #0006;transition:filter .12s}
+button:hover:not(:disabled){filter:brightness(1.18)}
+button:active:not(:disabled){transform:translateY(1px)}
+button:disabled{opacity:.42;cursor:default}
+button.go{background:linear-gradient(#4a9a4a,#2e6e34);border-color:#7ccc7c;font-weight:700;text-shadow:0 1px 0 #0006}
+#wrap{flex:1;position:relative;min-height:0}
+canvas{position:absolute;left:0;top:0;width:100%;height:100%;display:block}
+#ctr{position:absolute;right:8px;bottom:8px;padding:4px 10px;font-size:12px;opacity:.92;z-index:4}
+#hint{padding:6px 10px;background:linear-gradient(#141923,#10141c);font-size:13px;color:#aab;border-top:1px solid #2a3040;min-height:18px}
+#menu{position:absolute;display:none;background:linear-gradient(#222a3c,#171c29);border:1px solid #5a6690;border-radius:12px;padding:7px;z-index:5;min-width:236px;box-shadow:0 8px 24px #000c}
+#menu button{display:block;width:100%;text-align:left;margin:3px 0}
+#menu .t{font-size:12px;color:#b4bcd0;padding:2px 4px}
+#menu .mi{display:flex;align-items:center;gap:8px;padding:5px 8px 5px 5px}
+#menu .mi .ib{flex:none;width:40px;height:40px;border-radius:8px;background:radial-gradient(#3a4560,#1a2030);border:1px solid #3a4560;display:flex;align-items:center;justify-content:center;overflow:hidden}
+#menu .mi .ib img{width:40px;height:40px;display:block}
+#menu .mi .tx{flex:1;min-width:0;line-height:1.15}
+#menu .mi .tx small{display:block;font-size:11px;color:#8fd88f}
+#menu .mi .tx small.dm{color:#9aa}
+.cost{display:inline-flex;gap:6px;align-items:center;flex:none;font-size:12px;font-weight:700}
+.cost span{display:inline-flex;align-items:center;gap:2px}
+.cost span.no{color:#ff7a6b}
+.cost img{display:block}
+.fr{font-size:12px;font-weight:800;color:#8fe08f}
+@media(max-width:700px){.rs .lb{display:none}}
+@media(max-width:520px){#hud{gap:4px 6px;padding:5px 6px;font-size:13px}#hud button{padding:5px 8px}.logo{display:none}.rs{padding:2px 6px 2px 3px}}
+button.pulse{border-color:#f1c84b;box-shadow:0 0 10px #f1c84bbb,inset 0 1px 0 #ffffff26}
+#tech{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0,#1b2236f6,#0a0d14f6 70%);display:none;z-index:8;overflow-y:auto;padding:8px 10px 16px;box-sizing:border-box;touch-action:pan-y}
+#tech .in{max-width:800px;margin:0 auto}
+#tech .hd{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}
+#tech h2{margin:0;font-size:18px;letter-spacing:1px;color:#f1d98a}
+#tech .pts{display:inline-flex;align-items:center;gap:5px;color:#ffe27a;font-weight:700;background:#0008;border:1px solid #6a5a20;border-radius:14px;padding:3px 12px 3px 6px}
+.tree{position:relative;padding-top:4px}
+.root{width:46px;height:46px;margin:0 auto;border-radius:50%;background:radial-gradient(#4a4230,#1e1a12);border:2px solid #f1c84b;box-shadow:0 0 14px #f1c84b66;display:flex;align-items:center;justify-content:center;position:relative}
+.root img{width:34px;height:34px}
+.root::after{content:'';position:absolute;left:50%;top:100%;width:3px;height:12px;margin-left:-1.5px;background:#f1c84b;box-shadow:0 0 6px #f1c84b}
+.cols{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;position:relative;padding-top:26px}
+.cols::before{content:'';position:absolute;top:12px;left:16.66%;right:16.66%;height:3px;border-radius:2px;background:#f1c84b;box-shadow:0 0 8px #f1c84baa}
+.col{position:relative;display:flex;flex-direction:column;align-items:stretch;--bc:#f1c84b}
+.col::before{content:'';position:absolute;left:50%;top:-14px;width:3px;height:14px;margin-left:-1.5px;background:#f1c84b;box-shadow:0 0 6px #f1c84b}
+.col.def{--bc:#ef5b50}.col.vis{--bc:#4aa8f2}
+.bh{display:flex;align-items:center;justify-content:center;gap:6px;font-size:12px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--bc);padding:5px 4px;border-radius:10px;background:#0009;border:1px solid var(--bc);margin-bottom:0}
+.bh img{width:20px;height:20px}
+.ln{width:4px;height:18px;margin:0 auto;background:#2a3042;border-radius:2px}
+.ln.on{background:var(--bc);box-shadow:0 0 8px var(--bc)}
+#tech .nd{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;width:100%;box-sizing:border-box;text-align:center;margin:0;padding:8px 6px 8px;font-size:11px;line-height:1.2;border-radius:14px;background:linear-gradient(#232b40,#161b29);border:2px solid color-mix(in srgb,var(--bc) 45%,#222);color:#cfd4e2;box-shadow:0 2px 6px #0008}
+#tech .nd .ni{position:relative;width:46px;height:46px;border-radius:50%;background:radial-gradient(#2e3750,#10131c);border:2px solid var(--bc);display:flex;align-items:center;justify-content:center}
+#tech .nd .ni img{width:32px;height:32px;display:block}
+#tech .nd .nn{font-weight:800;font-size:12px;color:#fff}
+#tech .nd .nx{color:#aab2c6;font-size:10.5px;min-height:3.6em}
+#tech .nd .cs{display:inline-flex;align-items:center;gap:3px;font-weight:700;font-size:11px;border-radius:10px;padding:2px 8px;background:#0008;color:#ffe27a}
+#tech .nd .cs img{width:13px;height:13px}
+#tech .nd .bd{position:absolute;right:-5px;top:-5px;width:20px;height:20px;border-radius:50%;display:none;align-items:center;justify-content:center}
+#tech .nd .bd svg{width:12px;height:12px}
+#tech .nd:disabled{opacity:1}
+#tech .nd.own{background:linear-gradient(color-mix(in srgb,var(--bc) 80%,#fff 0%),color-mix(in srgb,var(--bc) 50%,#000));border-color:#fff8;color:#fff;box-shadow:0 0 14px color-mix(in srgb,var(--bc) 60%,transparent)}
+#tech .nd.own .nx{color:#fffe}
+#tech .nd.own .ni{background:radial-gradient(#ffffff55,#00000033);border-color:#fff}
+#tech .nd.own .cs{color:#fff;background:#0005}
+#tech .nd.own .bd{display:flex;background:#2fbf5f;border:2px solid #fff}
+#tech .nd.av{border-color:var(--bc);animation:glw 1.4s ease-in-out infinite}
+#tech .nd.av .ni{box-shadow:0 0 10px var(--bc)}
+@keyframes glw{0%,100%{box-shadow:0 0 6px var(--bc),0 2px 6px #0008}50%{box-shadow:0 0 18px var(--bc),0 0 4px var(--bc),0 2px 6px #0008}}
+#tech .nd.poor{opacity:.9}
+#tech .nd.poor .cs{color:#ff8a7a}
+#tech .nd.lock{opacity:.5;filter:grayscale(.7);border-color:#2a3042;border-style:dashed}
+#tech .nd.lock .ni{border-color:#3a4258}
+#tech .nd.lock .bd{display:flex;background:#3a4258;border:2px solid #6a7490}
+#tech .nt{font-size:12px;color:#8a92a8;margin:12px 0 4px;text-align:center}
+@media(min-width:700px){#tech .in{max-width:720px}#tech .nd{padding:7px 10px;gap:3px;font-size:12.5px}#tech .nd .ni{width:48px;height:48px}#tech .nd .ni img{width:34px;height:34px}#tech .nd .nn{font-size:14px}#tech .nd .nx{font-size:12px;min-height:2.4em}#tech .nd .cs{font-size:12px}.ln{height:14px}.bh{font-size:13px}.root{width:46px;height:46px}.cols{padding-top:24px}#tech h2{font-size:20px}#tech .nt{margin:8px 0 0}}
+#over{position:absolute;inset:0;background:#000b;display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;z-index:9;text-align:center}
+#over h1{margin:0;font-size:34px;color:#ff7a6b}
+</style>
+</head><body>
+<div id="app">
+ <div id="hud">
+  <span class="logo">HEXKEEP</span>
+  <span class="rs g" title="Gold"><i data-ic="gold"></i><span class="lb">Gold</span><b id="rg"></b></span><span class="rs w" title="Wood"><i data-ic="wood"></i><span class="lb">Wood</span><b id="rw"></b></span><span class="rs s" title="Stone"><i data-ic="stone"></i><span class="lb">Stone</span><b id="rs"></b></span><span class="rs c" title="Crystal"><i data-ic="crystal"></i><span class="lb">Crystal</span><b id="rc"></b></span>
+  <span class="rs h" title="Castle HP"><i data-ic="heart"></i><span class="lb">Castle</span><b id="hp"></b></span><span class="rs wvc" title="Wave"><i data-ic="flag"></i><span class="lb">Wave</span><b id="wv"></b></span>
+  <button id="go" class="go"></button><button id="sp">Speed 1x</button><button id="tb">Tech</button>
+ </div>
+ <div id="wrap"><canvas id="c"></canvas><button id="ctr">Center</button><div id="menu"></div><div id="tech"></div>
+  <div id="over"><h1>Castle fallen</h1><div id="overt" style="font-size:18px"></div><button id="re" class="go">Restart</button></div></div>
+ <div id="hint"></div>
+</div>
+<script>
+(function () {
+"use strict";
+// ===== src/hex.js =====
+// Hex grid maths. Axial coordinates (q, r); pointy-top hexes with radius 1 in world space.
+const SQ3 = Math.sqrt(3);
+const DIRS = [[1,0],[1,-1],[0,-1],[-1,0],[-1,1],[0,1]];
+// Screen-space angle of each of the six neighbour directions (matches DIRS order).
+const ANG = [0,-Math.PI/3,-2*Math.PI/3,Math.PI,2*Math.PI/3,Math.PI/3];
+const key = (q, r) => q + ',' + r;
+// axial -> world position
+const W2 = (q, r) => ({ x: SQ3 * (q + r / 2), y: 1.5 * r });
+// hex distance from the origin (the castle)
+const hd = (q, r) => Math.max(Math.abs(q), Math.abs(r), Math.abs(q + r));
+// world position -> nearest hex [q, r]
+function worldToHex(wx, wy) {
+  const fq = SQ3 / 3 * wx - wy / 3, fr = 2 / 3 * wy;
+  let x = fq, z = fr, y = -x - z;
+  let rx = Math.round(x), ry = Math.round(y), rz = Math.round(z);
+  const dx = Math.abs(rx - x), dy = Math.abs(ry - y), dz = Math.abs(rz - z);
+  if (dx > dy && dx > dz) rx = -ry - rz; else if (dy > dz) ry = -rx - rz; else rz = -rx - ry;
+  return [rx, rz];
+}
+
+// ===== src/data/structures.js =====
+// Every structure the player can build, one entry per structure.
+// This file is plain data: change a number, rebuild (`node tools/build.mjs`), play.
+//
+//  id             key used in code (must match the object key)
+//  name           shown in menus
+//  description    tooltip text
+//  icon           which drawing to use (see STRUCTURE_ART in src/render/structures.js)
+//  cost           { gold, wood, stone, crystal } - omitted resources cost 0
+//  hp             structure hit points
+//  sight          hexes revealed around it when built
+//  allowedTerrain terrains it can be built on
+//  --- towers only (a structure with `damage` is a tower) ---
+//  range          hexes
+//  damage         damage per shot
+//  cooldown       seconds between shots (the "fire rate")
+//  projectile     { kind: 'arrow' | 'bolt' | 'shell', flight: seconds }; arrows and bolts home in
+//  recoilDecay    speed of the firing animation (visual only)
+//  splash         { radius } area damage around the impact (radius in world units, hex centres are ~1.73 apart)
+//  slow           { duration: seconds, factor: speed multiplier while slowed }
+//  terrainBonus   { terrain, damage: multiplier, slowDuration: multiplier } when built on that terrain
+//  upgrade        { cost, damageMult, slowDurationMult, text } one upgrade level
+//  --- other ---
+//  yield          harvester income per wave, per terrain
+//  revealPerWave  scan tower: hexes revealed after every wave
+//  blocksPath     enemies must destroy it to pass (walls); pathCost is its weight when no path exists
+
+const ANY = ['plain', 'wood', 'stone', 'crystal'];
+
+const STRUCTURES = {
+  scan: {
+    id: 'scan', name: 'Scan tower', icon: 'scan',
+    description: 'sight 2; reveals 2 hexes each wave',
+    cost: { gold: 15 }, hp: 30, sight: 2,
+    allowedTerrain: ANY,
+    revealPerWave: 2,
+  },
+  harv: {
+    id: 'harv', name: 'Harvester', icon: 'harv',
+    description: 'resource hex only, +4/wave (+2 crystal)',
+    cost: { gold: 10 }, hp: 35, sight: 1,
+    allowedTerrain: ['wood', 'stone', 'crystal'],
+    blockedHint: 'wood/stone only',
+    yield: { wood: 4, stone: 4, crystal: 2 },
+    terrainNote: { crystal: '+2 crystal' },
+  },
+  archer: {
+    id: 'archer', name: 'Archer tower', icon: 'archer',
+    description: 'fast, range 5; wood hex +50%',
+    cost: { gold: 10, wood: 5 }, hp: 40, sight: 1,
+    allowedTerrain: ANY,
+    range: 5, damage: 5, cooldown: 0.45,
+    projectile: { kind: 'arrow', flight: 0.18 },
+    recoilDecay: 4,
+    terrainBonus: { terrain: 'wood', damage: 1.5 },
+    upgrade: { cost: { gold: 10, stone: 5 }, damageMult: 1.6, text: '+60% dmg' },
+  },
+  cat: {
+    id: 'cat', name: 'Catapult', icon: 'cat',
+    description: 'splash, range 6; stone hex +50%',
+    cost: { gold: 15, stone: 5 }, hp: 40, sight: 1,
+    allowedTerrain: ANY,
+    range: 6, damage: 14, cooldown: 2.0,
+    projectile: { kind: 'shell', flight: 0.7 },
+    recoilDecay: 1.5,
+    splash: { radius: 1.1 },
+    terrainBonus: { terrain: 'stone', damage: 1.5 },
+    upgrade: { cost: { gold: 10, stone: 5 }, damageMult: 1.6, text: '+60% dmg' },
+  },
+  mage: {
+    id: 'mage', name: 'Mage tower', icon: 'mage',
+    description: 'slows enemies, range 4; crystal hex +50%',
+    cost: { gold: 15, crystal: 4 }, hp: 35, sight: 1,
+    allowedTerrain: ANY,
+    range: 4, damage: 3, cooldown: 1.1,
+    projectile: { kind: 'bolt', flight: 0.3 },
+    recoilDecay: 4,
+    slow: { duration: 2, factor: 0.5 },
+    terrainBonus: { terrain: 'crystal', damage: 1.5, slowDuration: 1.5 },
+    upgrade: { cost: { gold: 10, crystal: 3 }, damageMult: 1.6, slowDurationMult: 1.5, text: '+60% dmg, +50% slow' },
+  },
+  wall: {
+    id: 'wall', name: 'Wall', icon: 'wall',
+    description: 'blocks enemies',
+    cost: { wood: 3 }, hp: 60, sight: 1,
+    allowedTerrain: ANY,
+    blocksPath: true, pathCost: 6,
+  },
+};
+
+// The castle is not buildable, but its numbers live here too.
+const CASTLE = { sight: 2, maxHp: 20 };
+
+// Fraction of the paid cost refunded (rounded down per resource) when selling.
+const SELL_REFUND = 0.5;
+
+// ===== src/data/terrain.js =====
+// Terrain types, map size and map-generation rules.
+// Everything here is plain data: edit the numbers, rebuild, play.
+
+const RESOURCES = ['gold', 'wood', 'stone', 'crystal'];
+
+// Hex radius of the whole map (distance from the castle to the edge).
+const MAP_RADIUS = 17;
+
+// Order matters: it is used to seed the cached tile art (keep new terrains at the end,
+// before 'fog' if you do not want existing tiles to change look).
+//   color: [top, bottom] gradient of the tile
+//   floatColor: colour of the "+4 wood" floating text when a harvester pays out here
+const TERRAINS = {
+  plain:   { color: ['#c7bba1', '#a79b82'] },
+  wood:    { color: ['#5d8c55', '#3f6a41'], floatColor: '#7fcf6a' },
+  stone:   { color: ['#a4a8ae', '#80858d'], floatColor: '#b4bcc8' },
+  crystal: { color: ['#3a2c6c', '#241a4a'], floatColor: '#c78bff' },
+  castle:  { color: ['#d2c7a4', '#b0a27a'] },
+  fog:     { color: ['#141822', '#0b0e15'] },
+};
+
+// Map generation. Every hex gets a random roll x in [0,1):
+//   1. crystal, if it is at least `minDistance` hexes from the castle, with probability `chance`
+//   2. otherwise the first entry of `rolls` whose `below` is greater than x
+//   3. otherwise plain
+const MAP_GEN = {
+  crystal: { minDistance: 6, chance: 0.05 },
+  rolls: [
+    { terrain: 'wood',  below: 0.15 },
+    { terrain: 'stone', below: 0.30 },
+  ],
+  // Within `radius` hexes of the castle at least one hex of each terrain is guaranteed
+  // (a plain hex is converted if none exists).
+  guaranteedNearCastle: { radius: 2, terrains: ['wood', 'stone'] },
+};
+
+// ===== src/data/tech.js =====
+// The tech tree. Three branches of three nodes, each node requires the previous one.
+//
+// Node fields:
+//   id        unique id
+//   branch    id of the branch it belongs to
+//   name      shown on the tree
+//   cost      research points
+//   requires  id of the node that must be owned first (or null)
+//   txt       effect description shown to the player
+//   icon      icon id (see ICONS in src/render/icons.js)
+//   effect    parameters read by the engine through tech('key', default). The keys are:
+//     harvestBonus   +N to every harvester yield
+//     waveGold       +N castle gold per wave
+//     costMult       multiplier on all building costs
+//     damageMult     multiplier on all tower damage
+//     rangeBonus     +N hexes of tower range
+//     splashMult     multiplier on splash radius
+//     fireRate       { towerId: multiplier } faster fire for those towers
+//     sightBonus     +N sight on every building and the castle
+//     scanBonus      +N extra hexes revealed by scan towers per wave
+//     bountyBonus    +N gold per kill
+//     maxHp / heal   castle max HP increase, and immediate healing
+// Adding a new effect key needs a line in the engine that reads it; the existing ones
+// can be re-assigned to any node freely.
+
+const TECH_BRANCHES = [
+  { id: 'eco', name: 'Economy', icon: 'gold' },
+  { id: 'def', name: 'Defense', icon: 'sword' },
+  { id: 'vis', name: 'Vision',  icon: 'eye' },
+];
+
+const TECH_NODES = [
+  { id: 'e1', branch: 'eco', name: 'Deep Veins',       cost: 1, requires: null, icon: 'pick',      txt: 'Harvesters +1 yield',                               effect: { harvestBonus: 1 } },
+  { id: 'e2', branch: 'eco', name: 'Royal Tax',        cost: 2, requires: 'e1', icon: 'coins',     txt: 'Castle +5 gold per wave',                           effect: { waveGold: 5 } },
+  { id: 'e3', branch: 'eco', name: 'Master Builders',  cost: 3, requires: 'e2', icon: 'tag',       txt: 'Buildings cost 15% less',                           effect: { costMult: 0.85 } },
+  { id: 'd1', branch: 'def', name: 'Sharp Edges',      cost: 1, requires: null, icon: 'sword',     txt: 'All towers +20% damage',                            effect: { damageMult: 1.2 } },
+  { id: 'd2', branch: 'def', name: 'Long Reach',       cost: 2, requires: 'd1', icon: 'aim',       txt: 'All tower range +1 hex',                            effect: { rangeBonus: 1 } },
+  { id: 'd3', branch: 'def', name: 'Siege Craft',      cost: 3, requires: 'd2', icon: 'boom',      txt: 'Catapult splash +50%, archer fire rate +25%',       effect: { splashMult: 1.5, fireRate: { archer: 1.25 } } },
+  { id: 'v1', branch: 'vis', name: 'Wide Eyes',        cost: 1, requires: null, icon: 'eye',       txt: 'All building sight +1',                             effect: { sightBonus: 1 } },
+  { id: 'v2', branch: 'vis', name: 'Beacon Light',     cost: 2, requires: 'v1', icon: 'beacon',    txt: 'Scan towers reveal +1 hex per wave',                effect: { scanBonus: 1 } },
+  { id: 'v3', branch: 'vis', name: 'Bounty & Bulwark', cost: 3, requires: 'v2', icon: 'heartplus', txt: 'Enemies drop +1 gold; castle +5 max HP (heal 5)',   effect: { bountyBonus: 1, maxHp: 5, heal: 5 } },
+];
+
+// Branches with their nodes attached, in tree order (this is what the UI and window.game.TECH use).
+const TECH = TECH_BRANCHES.map(b => ({ ...b, nodes: TECH_NODES.filter(n => n.branch === b.id) }));
+
+// ===== src/data/waves.js =====
+// Wave pacing, economy and start conditions. Tweak the constants or the small formulas.
+
+// ---- start of a new game
+const START_RESOURCES = { gold: 30, wood: 5, stone: 5, crystal: 4 };
+const FREE_SCAN_TOWERS = 1;     // first N scan towers are free
+
+// ---- income
+const RESEARCH_PER_WAVE = 1;    // tech points earned per wave survived
+const WAVE_GOLD_BASE = 10;      // castle income: BASE + wave number (+ tech bonuses)
+const waveGold = w => WAVE_GOLD_BASE + w;
+
+// ---- how many enemies, how tough
+const waveCount = w => w <= 2 ? w + 2 : w === 3 ? 6 : Math.floor(3 + w * 2);
+const HP_PER_WAVE = 0.12;
+const HP_PER_WAVE_SQ = 0.01;
+const HP_LATE_START = 10;       // after this wave extra scaling kicks in
+const HP_LATE_PER_WAVE = 0.07;
+const hpMult = w =>
+  (1 + HP_PER_WAVE * (w - 1) + HP_PER_WAVE_SQ * (w - 1) * (w - 1)) *
+  (1 + HP_LATE_PER_WAVE * Math.max(0, w - HP_LATE_START));
+
+// Early waves are softened: hp multiplier for waves 1..3, then 1.
+const EASE_IN = { 1: 0.6, 2: 0.8, 3: 0.9 };
+const easeMult = w => EASE_IN[w] === undefined ? 1 : EASE_IN[w];
+
+// Enemy speed grows 1% per wave.
+const SPEED_PER_WAVE = 0.01;
+const speedMult = w => 1 + SPEED_PER_WAVE * w;
+
+// ---- spawning
+const FIRST_SPAWN_DELAY = 0.3;  // seconds before the first enemy
+const SPAWN_GAP_START = 1.1;    // seconds between spawns on wave 0 ...
+const SPAWN_GAP_PER_WAVE = 0.05; // ... shrinking by this per wave
+const SPAWN_GAP_MIN = 0.4;
+const spawnGap = w => Math.max(SPAWN_GAP_MIN, SPAWN_GAP_START - SPAWN_GAP_PER_WAVE * w);
+const SPAWN_RING_MARGIN = 2;    // enemies spawn this many hexes beyond the revealed area
+const SPAWN_ANGLE_STEP = 2.399963; // golden angle: spreads spawns around the castle
+const SPAWN_ANGLE_JITTER = 0.5;
+
+// ===== src/dom.js =====
+// The canvas and a tiny DOM helper, shared by everything that draws or builds UI.
+const cv = document.getElementById('c');
+const ctx = cv.getContext('2d');
+const $ = id => document.getElementById(id);
+
+// ===== src/map.js =====
+// Map generation, vision / fog of war and scan-tower revealing.
+
+const rnd = a => a[Math.floor(Math.random() * a.length)];
+
+// Reveal every hex within `rad` of (q0, r0). `flash` is how long the new hex glows.
+function reveal(q0, r0, rad, flash) {
+ for (let dq = -rad; dq <= rad; dq++) for (let dr = Math.max(-rad, -dq - rad); dr <= Math.min(rad, -dq + rad); dr++) {
+  const c = cells.get(key(q0 + dq, r0 + dr)); if (c && !c.revealed) { c.revealed = true; c.newT = flash || 1.5; }
+ }
+}
+
+function rollTerrain(x) {
+ for (const rule of MAP_GEN.rolls) if (x < rule.below) return rule.terrain;
+ return 'plain';
+}
+
+// Fill `cells` / `cellList` with a fresh random map (nothing revealed yet).
+function generateMap() {
+ cells.clear(); cellList.length = 0;
+ const R = MAP_RADIUS, cry = MAP_GEN.crystal;
+ for (let q = -R; q <= R; q++) for (let r = Math.max(-R, -q - R); r <= Math.min(R, -q + R); r++) {
+  const x = Math.random();
+  const c = { q, r, terrain: (hd(q, r) >= cry.minDistance && Math.random() < cry.chance) ? 'crystal' : rollTerrain(x), revealed: false, b: null, newT: 0 };
+  cells.set(key(q, r), c); cellList.push(c);
+ }
+ // v: tile art variant, nb: the six neighbours (null off the map)
+ for (const c of cellList) { c.v = ((c.q * 73 + c.r * 151 + c.q * c.r * 17) & 255) % 4; c.nb = DIRS.map(d => cells.get(key(c.q + d[0], c.r + d[1])) || null); }
+ const cc = cells.get('0,0'); cc.terrain = 'castle';
+ const g = MAP_GEN.guaranteedNearCastle;
+ const near = cellList.filter(c => c !== cc && hd(c.q, c.r) <= g.radius);
+ const ensure = t => { if (!near.some(c => c.terrain === t)) { rnd(near.filter(c => c.terrain === 'plain')).terrain = t; } };
+ for (const t of g.terrains) ensure(t);
+}
+
+// Reveal the `count` nearest hidden hexes around a scan tower's cell (ties broken randomly).
+function scanReveal(c, count) {
+ const out = [];
+ for (let k = 0; k < count; k++) {
+  let best = [], bd = 1e9;
+  for (const u of cellList) { if (u.revealed) continue; const d = hd(u.q - c.q, u.r - c.r); if (d < bd) { bd = d; best = [u]; } else if (d === bd) best.push(u); }
+  if (best.length) { const u = rnd(best); u.revealed = true; u.newT = 2.5; out.push(u); }
+ }
+ return out;
+}
+
+// ===== src/camera.js =====
+// Camera and screen layout: world <-> screen conversion, zoom, canvas sizing.
+
+const BASE = 30; // pixels per hex radius at zoom 1
+const L = { S: BASE, w: 0, h: 0, dpr: 1 }; // S = current pixels per hex radius
+const cam = { x: 0, y: 0, z: 1 };
+
+function updS() { L.S = BASE * cam.z; }
+function clampCam() { const m = MAP_RADIUS * SQ3, d = Math.hypot(cam.x, cam.y); if (d > m) { cam.x *= m / d; cam.y *= m / d; } }
+function resize() {
+ const w = $('wrap'), dpr = window.devicePixelRatio || 1;
+ L.w = w.clientWidth; L.h = w.clientHeight; cv.width = L.w * dpr; cv.height = L.h * dpr; L.dpr = dpr; updS();
+}
+const scr = (x, y) => ({ x: L.w / 2 + (x - cam.x) * L.S, y: L.h / 2 + (y - cam.y) * L.S });
+function zoomAt(px, py, f) {
+ const wx = cam.x + (px - L.w / 2) / L.S, wy = cam.y + (py - L.h / 2) / L.S;
+ cam.z = Math.max(.5, Math.min(2, cam.z * f)); updS();
+ cam.x = wx - (px - L.w / 2) / L.S; cam.y = wy - (py - L.h / 2) / L.S; clampCam();
+}
+// screen pixel -> cell (or null)
+function pick(px, py) {
+ const wx = cam.x + (px - L.w / 2) / L.S, wy = cam.y + (py - L.h / 2) / L.S;
+ const [q, r] = worldToHex(wx, wy);
+ return cells.get(key(q, r)) || null;
+}
+
+// ===== src/data/enemies.js =====
+// Enemy types. Plain data: edit, rebuild, play.
+//
+//  hp          base hit points (multiplied by the wave formula in waves.js)
+//  speed       hexes per second (also scaled per wave, see waves.js)
+//  dmg         damage dealt to a structure every 0.8 s while it is blocked by it
+//  castleDmg   castle hit points lost when it reaches the castle
+//  bounty      gold dropped when killed
+//  firstWave   first wave in which this type can appear
+//  chance      pick threshold, see ENEMY_PICK_ORDER
+//  r           body size (hit/draw size, hex radius = 1)
+//  drawScale   extra multiplier for the drawing
+//  barOffset   how high the health bar floats above the enemy (hex radius = 1)
+//  color       particle colour when killed
+//  art         which drawing to use (see ENEMY_ART in src/render/enemies.js)
+
+const ENEMIES = {
+  grunt:  { id: 'grunt',  name: 'Grunt',  art: 'grunt',  hp: 20, speed: 0.9,  dmg: 4, castleDmg: 1, bounty: 1, firstWave: 1, chance: 1,    r: 0.3,  drawScale: 1.4,  barOffset: 0.62, color: '#d9534f' },
+  runner: { id: 'runner', name: 'Runner', art: 'runner', hp: 10, speed: 1.8,  dmg: 3, castleDmg: 1, bounty: 1, firstWave: 4, chance: 0.45, r: 0.22, drawScale: 1.5,  barOffset: 0.5,  color: '#f0a030' },
+  brute:  { id: 'brute',  name: 'Brute',  art: 'brute',  hp: 75, speed: 0.55, dmg: 9, castleDmg: 2, bounty: 2, firstWave: 7, chance: 0.18, r: 0.42, drawScale: 1.25, barOffset: 1.05, color: '#8a4fb0' },
+};
+
+// Every spawn rolls x in [0,1). Types in ENEMY_PICK_ORDER are tried in order: the first one
+// whose firstWave has been reached and whose `chance` is greater than x wins. Anything left
+// over is DEFAULT_ENEMY. (So a bigger `chance` means more of that enemy; list rarer types first.)
+const ENEMY_PICK_ORDER = ['brute', 'runner'];
+const DEFAULT_ENEMY = 'grunt';
+
+// ===== src/path.js =====
+// Enemy pathing. Distance fields are measured from the castle:
+//  d1  plain BFS over hexes that are not blocked by walls (what enemies follow normally)
+//  d2  Dijkstra where walls are passable but expensive; used only when walls cut the castle off
+
+const blocksPath = c => !!(c.b && STRUCTURES[c.b.type].blocksPath);
+
+function fields() {
+ world.d1 = new Map(); const d1 = world.d1, q = [cells.get('0,0')]; d1.set('0,0', 0);
+ for (let i = 0; i < q.length; i++) { const c = q[i]; const d = d1.get(key(c.q, c.r));
+  for (const dd of DIRS) { const n = cells.get(key(c.q + dd[0], c.r + dd[1]));
+   if (!n || d1.has(key(n.q, n.r)) || blocksPath(n)) continue;
+   d1.set(key(n.q, n.r), d + 1); q.push(n); } }
+ // wall connection mask (which neighbours are walls too), used only for drawing
+ for (const c of cellList) if (blocksPath(c)) { let m = 0; for (let i = 0; i < 6; i++) { const n = c.nb[i]; if (n && blocksPath(n)) m |= 1 << i; } c.b.wm = m; }
+ world.d2 = null;
+}
+function fields2() {
+ const d2 = new Map(); world.d2 = d2; cellList.forEach(c => d2.set(key(c.q, c.r), Infinity)); d2.set('0,0', 0);
+ const done = new Set();
+ for (;;) { let best = null, bd = Infinity;
+  for (const c of cellList) { const k = key(c.q, c.r); if (!done.has(k) && d2.get(k) < bd) { bd = d2.get(k); best = c; } }
+  if (!best) break; done.add(key(best.q, best.r));
+  for (const dd of DIRS) { const n = cells.get(key(best.q + dd[0], best.r + dd[1])); if (!n) continue;
+   const cost = blocksPath(n) ? STRUCTURES[n.b.type].pathCost : 1; const k = key(n.q, n.r);
+   if (bd + cost < d2.get(k)) d2.set(k, bd + cost); } }
+}
+
+// The neighbouring cell an enemy standing on (q, r) should step to next (or null).
+function nextStep(q, r) {
+ const map = world.d1.has(key(q, r)) ? world.d1 : (world.d2 || (fields2(), world.d2));
+ let best = null, bd = Infinity;
+ for (const dd of DIRS) { const n = cells.get(key(q + dd[0], r + dd[1])); if (!n) continue;
+  const v = map.get(key(n.q, n.r)); if (v !== undefined && v < bd) { bd = v; best = n; } }
+ return best;
+}
+
+// ===== src/waves.js =====
+// Wave flow: starting a wave, spawning enemies, and what happens when a wave ends.
+// The numbers (how many, how tough, how fast) live in src/data/waves.js and enemies.js.
+
+// Which enemy type a roll x in [0,1) produces on wave w (see ENEMY_PICK_ORDER in data/enemies.js).
+function pickEnemy(w, x) {
+ for (const id of ENEMY_PICK_ORDER) if (w >= ENEMIES[id].firstWave && x < ENEMIES[id].chance) return id;
+ return DEFAULT_ENEMY;
+}
+
+function startWave() {
+ if (st.phase !== 'build' || st.over) return;
+ const w = st.wave, n = waveCount(w); st.queue = [];
+ for (let i = 0; i < n; i++) { const x = Math.random(); st.queue.push(pickEnemy(w, x)); }
+ st.spawnT = FIRST_SPAWN_DELAY; st.spawnN = 0; st.a0 = Math.random() * Math.PI * 2; st.phase = 'wave'; closeMenu(); closeTech(); view.sel = null;
+}
+
+// The ring of hexes enemies spawn on: just beyond the revealed area.
+function spawnRing() {
+ let mr = 0; for (const c of cellList) if (c.revealed) { const d = hd(c.q, c.r); if (d > mr) mr = d; }
+ const sd = Math.min(MAP_RADIUS, mr + SPAWN_RING_MARGIN);
+ return cellList.filter(c => hd(c.q, c.r) === sd);
+}
+function spawn(t) {
+ const ring = spawnRing();
+ const ang = st.a0 + st.spawnN * SPAWN_ANGLE_STEP + (Math.random() - .5) * SPAWN_ANGLE_JITTER; st.spawnN++;
+ let c = null, bd = 9;
+ for (const u of ring) { const p = W2(u.q, u.r); let d = Math.abs(Math.atan2(Math.sin(Math.atan2(p.y, p.x) - ang), Math.cos(Math.atan2(p.y, p.x) - ang))); if (d < bd) { bd = d; c = u; } }
+ const p = W2(c.q, c.r), T = ENEMIES[t], w = st.wave;
+ const hp = T.hp * hpMult(w) * easeMult(w);
+ st.enemies.push({ t, q: c.q, r: c.r, x: p.x, y: p.y, tq: c.q, tr: c.r, fx: p.x, fy: p.y, p: 0, mode: 'idle', tc: null, acd: 0, hp, max: hp, flash: 0, slow: 0, slowF: 1, speed: T.speed * speedMult(w), dmg: T.dmg });
+}
+// Called every tick during a wave: releases the next queued enemy when its timer runs out.
+function spawnNext(dt) {
+ if (st.queue.length) { st.spawnT -= dt; if (st.spawnT <= 0) { spawn(st.queue.shift()); st.spawnT = spawnGap(st.wave); } }
+}
+
+function endWave() {
+ const bonus = waveGold(st.wave) + tech('waveGold', 0); st.rp += RESEARCH_PER_WAVE;
+ const hy = tech('harvestBonus', 0);
+ st.gold += bonus; flt(cells.get('0,0'), '+' + bonus + ' gold', '#f1c84b');
+ for (const c of cellList) {
+  const y = c.b && STRUCTURES[c.b.type].yield && STRUCTURES[c.b.type].yield[c.terrain];
+  if (y) { st[c.terrain] += y + hy; flt(c, '+' + (y + hy) + ' ' + c.terrain, TERRAINS[c.terrain].floatColor); }
+ }
+ for (const c of cellList) {
+  const n = c.b && STRUCTURES[c.b.type].revealPerWave;
+  if (n) for (const u of scanReveal(c, n + tech('scanBonus', 0))) flt(u, 'revealed', '#8cf');
+ }
+ st.wave++; st.phase = 'build';
+}
+
+// ===== src/combat.js =====
+// Towers, projectiles, enemy movement / attacks, and the per-tick world update.
+
+const NONE = {};
+
+// ---- tower numbers (all base values come from src/data/structures.js)
+function tdmg(c) { const b = c.b, T = STRUCTURES[b.type]; let d = T.damage;
+ if (T.terrainBonus && c.terrain === T.terrainBonus.terrain) d *= T.terrainBonus.damage;
+ if (b.upg) d *= T.upgrade.damageMult; d *= tech('damageMult', 1); return d; }
+const slowDur = c => { const T = STRUCTURES[c.b.type], tb = T.terrainBonus;
+ return T.slow.duration * (tb && tb.slowDuration && c.terrain === tb.terrain ? tb.slowDuration : 1) * (c.b.upg ? (T.upgrade.slowDurationMult || 1) : 1); };
+const rangeHex = b => STRUCTURES[b.type].range + tech('rangeBonus', 0);
+const trange = b => rangeHex(b) * SQ3;
+// splash radius of a tower type (or of the first splash tower if none is given)
+const splashR = (type) => { const T = type ? STRUCTURES[type] : Object.values(STRUCTURES).find(s => s.splash);
+ return T.splash.radius * tech('splashMult', 1); };
+
+// ---- enemies
+function decide(e) {
+ const best = nextStep(e.q, e.r);
+ if (!best) return;
+ if (best.b) { e.mode = 'atk'; e.tc = best; e.acd = .3; return; } // only a building on the next step blocks/gets attacked
+ e.tq = best.q; e.tr = best.r; e.fx = e.x; e.fy = e.y; e.p = 0; e.mode = 'move';
+}
+function updEnemy(e, dt) {
+ if (e.flash > 0) e.flash -= dt; if (e.slow > 0) e.slow -= dt;
+ const sf = e.slow > 0 ? e.slowF : 1;
+ e.ph = (e.ph || 0) + dt * (e.mode === 'move' ? e.speed * sf * 6 : 4);
+ if (e.mode === 'atk') {
+  const c = e.tc;
+  if (!c || !c.b) e.mode = 'idle';
+  else { e.acd -= dt; if (e.acd <= 0) { e.acd = .8; c.b.hp -= e.dmg; c.b.flash = .12;
+   if (c.b.hp <= 0) { flt(c, 'destroyed', '#f66'); c.b = null; world.pathDirty = true; e.mode = 'idle'; } } }
+ }
+ if (e.mode === 'idle') decide(e);
+ if (e.mode === 'move') {
+  const to = W2(e.tq, e.tr); e.p += e.speed * sf * dt;
+  const k = Math.min(1, e.p); e.x = e.fx + (to.x - e.fx) * k; e.y = e.fy + (to.y - e.fy) * k;
+  if (e.p >= 1) { e.q = e.tq; e.r = e.tr; e.x = to.x; e.y = to.y;
+   if (e.q === 0 && e.r === 0) { st.hp -= ENEMIES[e.t].castleDmg; st.flash = .3; st.shake = .3; e.dead = true;
+    if (st.hp <= 0) { st.hp = 0; gameOver(); } }
+   else e.mode = 'idle'; }
+ }
+}
+function dmgEnemy(e, d) { e.hp -= d; e.flash = .1; if (e.hp <= 0 && !e.dead) { e.dead = true; const b = ENEMIES[e.t].bounty + tech('bountyBonus', 0); st.gold += b; st.floats.push({ x: e.x, y: e.y, txt: '+' + b, col: '#f1c84b', t: 0 });
+ const col = ENEMIES[e.t].color; st.fx.push({ k: 'pop', x: e.x, y: e.y, t: 0, life: .4, col });
+ if (st.fx.length < 120) for (let i = 0; i < 5; i++) { const a = Math.random() * 6.28, v = .8 + Math.random() * 1.4; st.fx.push({ k: 'p', x: e.x, y: e.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, t: 0, life: .45, col }); }
+ if (st.coins.length < 30) st.coins.push({ x: e.x, y: e.y, t: 0, life: .7 }); } }
+
+// ---- one simulation tick
+function update(dt) {
+ st.time += dt; if (st.flash > 0) st.flash -= dt; if (st.shake > 0) st.shake -= dt;
+ for (const f of st.fx) f.t += dt; st.fx = st.fx.filter(f => f.t < f.life);
+ for (const f of st.coins) f.t += dt; st.coins = st.coins.filter(f => f.t < f.life);
+ for (const c of cellList) { if (c.newT > 0) c.newT -= dt; if (c.b && c.b.flash > 0) c.b.flash -= dt; if (c.b && c.b.fk > 0) c.b.fk = Math.max(0, c.b.fk - dt * STRUCTURES[c.b.type].recoilDecay); }
+ if (st.over) return;
+ if (world.pathDirty) { fields(); world.pathDirty = false; }
+ if (st.phase === 'wave') {
+  spawnNext(dt);
+  for (const e of st.enemies) if (!e.dead) updEnemy(e, dt);
+  for (const c of cellList) { const b = c.b; if (!isTower(b)) continue;
+   const T = STRUCTURES[b.type];
+   b.cd -= dt; if (b.cd > 0) continue;
+   const p = W2(c.q, c.r), rg = trange(b); let tg = null, bd = 1e9;
+   for (const e of st.enemies) { if (e.dead) continue; const d = Math.hypot(e.x - p.x, e.y - p.y);
+    if (d <= rg) { const cd = Math.hypot(e.x, e.y) + (T.slow && e.slow > 0 ? 100 : 0); if (cd < bd) { bd = cd; tg = e; } } }
+   if (!tg) continue;
+   const pj = T.projectile;
+   b.cd = T.cooldown / (tech('fireRate', NONE)[b.type] || 1);
+   st.projs.push({ x0: p.x, y0: p.y, x1: tg.x, y1: tg.y, t: 0, dur: pj.flight, dmg: tdmg(c), splash: !!T.splash, splashR: T.splash ? splashR(b.type) : 0, kind: pj.kind, tg,
+    slow: T.slow ? slowDur(c) : 0, slowF: T.slow ? T.slow.factor : 1 });
+   b.aim = Math.atan2(tg.y - p.y, tg.x - p.x); b.dx = Math.cos(b.aim) < 0 ? -1 : 1; b.fk = 1;
+  }
+ }
+ for (const pr of st.projs) { pr.t += dt;
+  if (pr.kind !== 'shell' && !pr.tg.dead) { pr.x1 = pr.tg.x; pr.y1 = pr.tg.y; }
+  if (pr.t >= pr.dur && !pr.done) { pr.done = true;
+   if (pr.splash) { for (const e of st.enemies) if (!e.dead && Math.hypot(e.x - pr.x1, e.y - pr.y1) <= pr.splashR) dmgEnemy(e, pr.dmg);
+    st.floats.push({ x: pr.x1, y: pr.y1, txt: '', ring: 1, col: '#fa6', t: 0, rad: pr.splashR }); st.fx.push({ k: 'dust', x: pr.x1, y: pr.y1, t: 0, life: .55 }); }
+   else if (!pr.tg.dead) { if (pr.slow) { pr.tg.slow = Math.max(pr.tg.slow, pr.slow); pr.tg.slowF = pr.slowF; } dmgEnemy(pr.tg, pr.dmg); } }
+ }
+ st.projs = st.projs.filter(p => !p.done);
+ st.enemies = st.enemies.filter(e => !e.dead);
+ st.floats.forEach(f => f.t += dt); st.floats = st.floats.filter(f => f.t < (f.ring ? .35 : 1.4));
+ if (st.phase === 'wave' && !st.queue.length && !st.enemies.length) endWave();
+}
+
+// ===== src/render/prims.js =====
+// Low-level canvas drawing helpers. Everything in the game is drawn in code, in "unit space"
+// (hex radius = 1). The current drawing context and style flags are module state; other
+// modules change them through the setters below.
+
+const TAU=Math.PI*2, OL='#2a1d16';
+let G=ctx, NOW=0, FLASH=false, FROST=false, LW=.05;
+const lwu=s=>Math.max(.045,1.4/s);
+const mixc=new Map();
+function K(c){
+ if(FLASH)return '#fff'; if(!FROST)return c;
+ let m=mixc.get(c);
+ if(!m){const n=parseInt(c.slice(1),16);m='rgb('+(((n>>16)&255)*.3+80|0)+','+(((n>>8)&255)*.3+130|0)+','+((n&255)*.3+180|0)+')';mixc.set(c,m);}
+ return m;
+}
+function fillS(f,s){if(f){G.fillStyle=f;G.fill();}if(s){G.strokeStyle=s;G.lineWidth=LW;G.lineJoin='round';G.stroke();}}
+function rect(x,y,w,h,f,s){G.beginPath();G.rect(x,y,w,h);fillS(f,s);}
+function poly(p,f,s){G.beginPath();G.moveTo(p[0],p[1]);for(let i=2;i<p.length;i+=2)G.lineTo(p[i],p[i+1]);G.closePath();fillS(f,s);}
+function circ(x,y,r,f,s){G.beginPath();G.arc(x,y,r,0,TAU);fillS(f,s);}
+function ell(x,y,rx,ry,f,s,rot){G.beginPath();G.ellipse(x,y,rx,ry,rot||0,0,TAU);fillS(f,s);}
+function line(x1,y1,x2,y2,c,w){G.beginPath();G.moveTo(x1,y1);G.lineTo(x2,y2);G.strokeStyle=c;G.lineWidth=w||LW;G.lineCap='round';G.stroke();}
+function shadow(rx,ry,x,y){ell(x,y,rx,ry,'rgba(0,0,0,.3)',null);}
+function block(x,y,w,h,c){
+ rect(x,y,w,h,K(c));
+ G.fillStyle='rgba(255,255,255,.16)';G.fillRect(x,y,w*.3,h);
+ G.fillStyle='rgba(0,0,0,.2)';G.fillRect(x+w*.72,y,w*.28,h);
+ G.fillStyle='rgba(255,255,255,.22)';G.fillRect(x,y,w,Math.min(h*.14,.06));
+ G.beginPath();G.rect(x,y,w,h);G.strokeStyle=OL;G.lineWidth=LW;G.lineJoin='round';G.stroke();
+}
+function bricks(x,y,w,h,rows,cols){
+ G.strokeStyle='rgba(30,22,16,.3)';G.lineWidth=LW*.6;G.beginPath();
+ for(let i=0;i<rows;i++){const y0=y+h*i/rows,y1=y+h*(i+1)/rows;if(i){G.moveTo(x,y0);G.lineTo(x+w,y0);}
+  for(let j=(i%2)?1:.5;j<cols;j++){const xx=x+w*j/cols;G.moveTo(xx,y0);G.lineTo(xx,y1);}}
+ G.stroke();
+}
+function star(x,y,r,f,s){G.beginPath();for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,rr=i%2?r*.45:r;const px=x+Math.cos(a)*rr,py=y+Math.sin(a)*rr;i?G.lineTo(px,py):G.moveTo(px,py);}G.closePath();fillS(f,s);}
+function upgMark(){
+ G.beginPath();G.ellipse(0,.52,.62,.2,0,0,TAU);G.strokeStyle='rgba(255,214,80,.95)';G.lineWidth=LW*1.6;G.stroke();
+ circ(.58,-.5,.25,'#2a1d16','#ffd84a');star(.58,-.5,.2,'#ffd84a','#8a5a00');
+}
+function glow(x,y,r,rgb,a){G.fillStyle='rgba('+rgb+','+a+')';for(let i=3;i>=1;i--){G.globalAlpha=.35;G.beginPath();G.arc(x,y,r*i/3,0,TAU);G.fill();}G.globalAlpha=1;}
+function gem(x,y,k,flash){
+ const P=(a,b)=>[x+a*k,y+b*k];
+ const t=P(0,-.5),ul=P(-.28,-.2),ur=P(.28,-.2),ll=P(-.22,.3),lr=P(.22,.3),bt=P(0,.48),m=P(0,-.04);
+ const fc=(pts,c)=>{G.beginPath();G.moveTo(pts[0][0],pts[0][1]);for(let i=1;i<pts.length;i++)G.lineTo(pts[i][0],pts[i][1]);G.closePath();G.fillStyle=flash?'#fff':c;G.fill();};
+ fc([t,ul,m],'#d2bfff');fc([ul,ll,bt,m],'#8a5cf0');fc([t,ur,m],'#7be8f5');fc([ur,lr,bt,m],'#2ba3cc');
+ G.beginPath();G.moveTo(t[0],t[1]);G.lineTo(ul[0],ul[1]);G.lineTo(ll[0],ll[1]);G.lineTo(bt[0],bt[1]);G.lineTo(lr[0],lr[1]);G.lineTo(ur[0],ur[1]);G.closePath();
+ G.strokeStyle='#1c1238';G.lineWidth=Math.max(LW*.8,.03);G.lineJoin='round';G.stroke();
+ G.beginPath();G.moveTo(ul[0],ul[1]);G.lineTo(m[0],m[1]);G.lineTo(ur[0],ur[1]);G.moveTo(m[0],m[1]);G.lineTo(bt[0],bt[1]);G.strokeStyle='rgba(20,10,50,.5)';G.lineWidth=Math.max(LW*.5,.02);G.stroke();
+}
+
+function setG(v){G=v;}
+function setNOW(v){NOW=v;}
+function setFLASH(v){FLASH=v;}
+function setFROST(v){FROST=v;}
+function setLW(v){LW=v;}
+
+// ===== src/render/structures.js =====
+// Structure and castle drawings (code-drawn art, unit space).
+
+// ---- structures
+function dCastle(S){
+ setLW(lwu(S));setFLASH(false);
+ shadow(.9,.26,.06,.52);
+ block(-.4,-.5,.8,1.0,'#c6c0b2');bricks(-.4,-.5,.8,1.0,6,5);
+ for(const x0 of [-.78,.38]){block(x0,-.3,.4,.8,'#b3ada0');bricks(x0,-.3,.4,.8,5,3);
+  for(let i=0;i<3;i++)block(x0+i*.15,-.42,.1,.12,'#b3ada0');
+  rect(x0+.15,-.1,.1,.2,'#2a2630',OL);}
+ for(let i=0;i<4;i++)block(-.4+i*.2,-.62,.16,.12,'#c6c0b2');
+ // roofs on side towers
+ for(const x0 of [-.78,.38]){poly([x0+.2-.0,-.82,x0-.02,-.42,x0+.42,-.42],'#b44a38',OL);poly([x0+.2,-.82,x0+.2,-.42,x0+.42,-.42],'rgba(0,0,0,.2)',null);}
+ // gate
+ G.beginPath();G.moveTo(-.17,.5);G.lineTo(-.17,.18);G.arc(0,.18,.17,Math.PI,0);G.lineTo(.17,.5);G.closePath();fillS('#3a2614',OL);
+ line(0,.0,0,.5,'#6a4a28',LW*.9);line(-.09,.02,-.09,.5,'#6a4a28',LW*.7);line(.09,.02,.09,.5,'#6a4a28',LW*.7);
+ // keep window
+ G.beginPath();G.moveTo(-.07,-.12);G.lineTo(-.07,-.28);G.arc(0,-.28,.07,Math.PI,0);G.lineTo(.07,-.12);G.closePath();fillS('#ffd36a',OL);
+ // flag
+ line(0,-.6,0,-1.08,'#3a2a1a',LW*1.4);circ(0,-1.1,.05,'#ffd84a',OL);
+ G.beginPath();G.moveTo(.02,-1.04);
+ for(let i=0;i<=8;i++){const u=i/8;G.lineTo(.02+u*.46,-1.04+Math.sin(NOW*6-u*5)*.06*u);}
+ for(let i=8;i>=0;i--){const u=i/8;G.lineTo(.02+u*.46,-.8+Math.sin(NOW*6-u*5)*.06*u);}
+ G.closePath();fillS('#d83a3a',OL);
+ star(.17,-.93,.07,'#ffd84a',null);
+}
+function dArcher(b){
+ const fk=(b&&b.fk)||0,aim=(b&&b.aim!=null)?b.aim:-.5;
+ shadow(.62,.2,.1,.56);
+ G.save();G.translate(0,.06);G.scale(.94,.94);
+ poly([-.46,.5,-.34,.1,.34,.1,.46,.5],K('#9a978f'),OL);bricks(-.33,.14,.66,.36,3,5);
+ G.fillStyle='rgba(0,0,0,.2)';G.fillRect(.18,.1,.2,.4);
+ block(-.3,-.32,.6,.42,'#a1713f');
+ line(-.1,-.32,-.1,.1,'rgba(40,24,10,.4)',LW*.7);line(.1,-.32,.1,.1,'rgba(40,24,10,.4)',LW*.7);
+ line(-.3,.1,.3,-.3,'#5a381a',LW*1.4);
+ rect(-.44,-.4,.88,.1,K('#6f4a28'),OL);
+ rect(-.38,-.74,.07,.36,K('#6f4a28'),OL);rect(.31,-.74,.07,.36,K('#6f4a28'),OL);
+ // archer
+ rect(-.07,-.55,.14,.15,K('#3b6fbf'),OL);circ(0,-.63,.085,K('#f0c9a0'),OL);
+ poly([-.09,-.66,0,-.76,.09,-.66],K('#2e5a2e'),OL);
+ G.save();G.translate(0,-.5);G.rotate(aim);
+ const ba=1.1,bx=Math.cos(ba)*.27,by=Math.sin(ba)*.27,pull=(1-fk)*.1;
+ G.beginPath();G.arc(0,0,.27,-ba,ba);G.strokeStyle='#7a4a22';G.lineWidth=LW*2.6;G.lineCap='round';G.stroke();
+ G.beginPath();G.moveTo(bx,-by);G.lineTo(bx-pull-.02,0);G.lineTo(bx,by);G.strokeStyle='rgba(255,255,255,.85)';G.lineWidth=LW*.6;G.stroke();
+ if(fk<.5){line(bx-pull-.02,0,.34,0,'#e8e0d0',LW*.8);poly([.34,-.04,.42,0,.34,.04],'#cfd4da',null);}
+ G.restore();
+ poly([-.56,-.7,0,-1.06,.56,-.7],K('#b8442e'),OL);poly([0,-1.06,.56,-.7,0,-.7],'rgba(0,0,0,.22)',null);poly([-.56,-.7,0,-1.06,-.2,-.7],'rgba(255,255,255,.16)',null);
+ line(-.56,-.7,.56,-.7,b&&b.upg?'#ffd84a':'#7a2a1a',LW*(b&&b.upg?1.8:1));
+ G.restore();
+ if(b&&b.upg)upgMark();
+}
+function dCat(b){
+ const fk=(b&&b.fk)||0,dir=(b&&b.dx)||1;
+ shadow(.7,.2,.05,.54);
+ G.save();G.scale(dir,1);
+ rect(-.62,.34,1.24,.13,K('#6f4a28'),OL);
+ for(const x of [-.4,.4]){circ(x,.42,.17,K('#4a2f18'),OL);circ(x,.42,.07,K('#c19a5c'),OL);for(let i=0;i<4;i++){const a=i*Math.PI/4;line(x-Math.cos(a)*.16,.42-Math.sin(a)*.16,x+Math.cos(a)*.16,.42+Math.sin(a)*.16,'#2a1a0a',LW*.7);}}
+ for(const sx of [-1,1]){poly([sx*.36,.36,sx*.18,.36,sx*.04,-.14,sx*.14,-.14],K('#a1713f'),OL);}
+ line(-.3,.24,.3,.24,'#5a381a',LW*1.4);
+ const cocked=2.5,fwd=5.4;let ang;
+ if(fk>.7){const p=Math.min(1,(1-fk)/.3);ang=cocked+(fwd-cocked)*p;}else{ang=cocked+(fwd-cocked)*(fk/.7);}
+ G.save();G.translate(0,-.14);G.rotate(ang);
+ rect(-.26,-.055,.9,.11,K('#c08a4a'),OL);
+ rect(-.34,-.1,.15,.2,K('#555c66'),OL);
+ poly([.5,-.1,.7,-.12,.66,.1,.5,.08],K('#6f4a28'),OL);
+ if(fk<.3)circ(.6,-.14,.11,K('#8a8f98'),OL);
+ G.restore();
+ circ(0,-.14,.07,K('#3a2614'),OL);
+ G.restore();
+ if(b&&b.upg){upgMark();}
+}
+function dMage(b){
+ const fk=(b&&b.fk)||0,t=NOW,ph=b?(b.q0||0):0,gl=.55+.2*Math.sin(t*3+ph)+fk*.8;
+ shadow(.45,.17,.08,.55);
+ poly([-.34,.52,-.2,-.3,.2,-.3,.34,.52],K('#8a85a0'),OL);bricks(-.28,-.26,.56,.76,5,4);
+ G.fillStyle='rgba(0,0,0,.22)';G.beginPath();G.moveTo(.2,-.3);G.lineTo(.34,.52);G.lineTo(.12,.52);G.lineTo(.1,-.3);G.fill();
+ G.fillStyle='rgba(255,255,255,.12)';G.beginPath();G.moveTo(-.2,-.3);G.lineTo(-.34,.52);G.lineTo(-.2,.52);G.lineTo(-.12,-.3);G.fill();
+ rect(-.3,.0,.6,.06,K('#7a4fd0'),OL);
+ G.fillStyle=FLASH?'#fff':'rgba(120,230,255,'+Math.min(1,.5+gl*.5)+')';G.beginPath();G.rect(-.04,-.18,.08,.2);G.fill();
+ // spire
+ poly([-.3,-.28,.3,-.28,.2,-.38,-.2,-.38],K('#6a3fb8'),OL);
+ poly([-.2,-.36,.2,-.36,0,-.86],K('#7d4fd0'),OL);poly([0,-.86,.2,-.36,0,-.36],'rgba(0,0,0,.25)',null);poly([-.2,-.36,0,-.86,-.07,-.36],'rgba(255,255,255,.18)',null);
+ star(0,-.5,.06,'#ffd84a',null);
+ // orb
+ const oy=-.97;
+ G.globalCompositeOperation='lighter';glow(0,oy,.2+.18*gl,'190,120,255',.5);G.globalCompositeOperation='source-over';
+ circ(0,oy,.12+.02*gl,K('#b97bff'),'#32105e');circ(-.03,oy-.03,.05,'rgba(255,255,255,'+Math.min(1,.5+gl*.5)+')',null);
+ if(b&&b.upg){rect(-.3,-.31,.6,.07,'#ffd84a','#8a5a00');upgMark();}
+}
+function dScan(b){
+ const hw=y=>.27+.1625*(y+.28),ph=b?(b.q0||0):0;
+ shadow(.5,.18,.08,.55);
+ poly([-.4,.52,-.27,-.28,.27,-.28,.4,.52],K('#ece7dc'),OL);
+ for(const [y0,y1] of [[.12,.3],[-.2,-.04]])poly([-hw(y0),y0,hw(y0),y0,hw(y1),y1,-hw(y1),y1],K('#c8402e'),null);
+ G.fillStyle='rgba(0,0,0,.2)';G.beginPath();G.moveTo(.1,-.28);G.lineTo(.27,-.28);G.lineTo(.4,.52);G.lineTo(.14,.52);G.fill();
+ G.beginPath();G.moveTo(-.4,.52);G.lineTo(-.27,-.28);G.lineTo(.27,-.28);G.lineTo(.4,.52);G.closePath();G.strokeStyle=OL;G.lineWidth=LW;G.stroke();
+ rect(-.12,.32,.24,.2,K('#3a2614'),OL);
+ rect(-.36,-.34,.72,.07,K('#3d4452'),OL);
+ const lit=.7+.3*Math.sin(NOW*4+ph);
+ rect(-.2,-.62,.4,.28,FLASH?'#fff':'rgba(255,226,120,'+lit+')',OL);
+ line(0,-.62,0,-.34,'#3d4452',LW);
+ poly([-.3,-.62,0,-.86,.3,-.62],K('#c0392b'),OL);circ(0,-.89,.04,K('#ddd'),OL);
+ const ang=NOW*1.7+ph*3;
+ G.globalCompositeOperation='lighter';
+ for(const o of [0,Math.PI]){
+  G.beginPath();G.moveTo(0,-.48);G.arc(0,-.48,1.25,ang+o-.16,ang+o+.16);G.closePath();G.fillStyle='rgba(255,236,150,.2)';G.fill();
+  G.beginPath();G.moveTo(0,-.48);G.arc(0,-.48,.85,ang+o-.07,ang+o+.07);G.closePath();G.fillStyle='rgba(255,246,200,.3)';G.fill();}
+ glow(0,-.48,.28,'255,230,120',.35);
+ G.globalCompositeOperation='source-over';
+ if(b&&b.upg)upgMark();
+}
+function dHarv(b,terr){
+ const t=NOW;
+ shadow(.72,.2,.02,.52);
+ if(terr==='wood'){
+  block(-.32,-.34,.64,.38,'#a77a45');line(-.2,-.34,-.2,.04,'rgba(40,24,10,.35)',LW*.7);line(0,-.34,0,.04,'rgba(40,24,10,.35)',LW*.7);line(.2,-.34,.2,.04,'rgba(40,24,10,.35)',LW*.7);
+  poly([-.44,-.32,0,-.74,.44,-.32],K('#7a4a2a'),OL);poly([0,-.74,.44,-.32,0,-.32],'rgba(0,0,0,.25)',null);
+  rect(-.07,-.14,.14,.18,K('#3a2614'),OL);
+  // logs pile
+  for(const [x,y,l] of [[.0,.42,.6],[.04,.26,.52],[.12,.1,.42]]){
+   rect(x,y-.07,l,.14,K('#8b5a2b'),OL);ell(x+l,y,.045,.07,K('#e0b070'),OL);line(x+.06,y-.02,x+l-.08,y-.02,'rgba(255,255,255,.2)',LW*.7);}
+  // stump + axe
+  rect(-.58,.28,.32,.18,K('#7a4e26'),OL);ell(-.42,.28,.16,.07,K('#e0b070'),OL);
+  G.save();G.translate(-.42,.26);G.rotate(-.7+Math.sin(t*3.2)*.22);
+  line(0,0,0,-.5,K('#6a4524'),LW*2);poly([0,-.5,.2,-.48,.22,-.34,0,-.32],K('#c3cad4'),OL);G.restore();
+ }else if(terr==='stone'){
+  poly([-.7,.45,-.55,-.05,-.2,-.2,.0,.1,-.05,.45],K('#757c86'),OL);poly([-.55,-.05,-.2,-.2,-.3,.0],'rgba(255,255,255,.3)',null);
+  ell(-.3,.4,.3,.08,'rgba(0,0,0,.35)',null);
+  block(.02,.2,.32,.26,'#b4bac2');block(.34,.2,.32,.26,'#a8aeb7');block(.18,-.06,.32,.26,'#c3c8d0');
+  G.save();G.translate(-.38,.4);G.rotate(-.9+Math.sin(t*3)*.35);
+  line(0,0,0,-.62,K('#6a4524'),LW*2);poly([-.24,-.56,0,-.7,.24,-.56,0,-.6],K('#aab3be'),OL);G.restore();
+ }else{
+  ell(0,.42,.55,.14,K('#4a505c'),OL);
+  G.globalCompositeOperation='lighter';glow(0,.3,.5,'120,220,255',.18+.08*Math.sin(t*4));G.globalCompositeOperation='source-over';
+  for(const sx of [-1,1]){poly([sx*.5,.42,sx*.38,.42,sx*.05,-.52,sx*.17,-.52],K('#6d7684'),OL);}
+  line(-.3,.0,.3,.0,'#4a505c',LW*1.4);line(-.4,.26,.4,.26,'#4a505c',LW*1.4);
+  rect(-.2,-.62,.4,.12,K('#59606d'),OL);circ(0,-.56,.07,K('#c3cad4'),OL);
+  const dy=Math.sin(t*5)*.04;line(0,-.5,0,-.05+dy,'#aab3be',LW*1.6);
+  gem(0,.12,.55+.05*Math.sin(t*4),FLASH);
+  gem(-.5,.36,.28,FLASH);
+  G.save();G.translate(.52,-.1);G.rotate(t*2);G.beginPath();for(let i=0;i<8;i++){const a=i*Math.PI/4;G.lineTo(Math.cos(a-.15)*.17,Math.sin(a-.15)*.17);G.lineTo(Math.cos(a+.15)*.17,Math.sin(a+.15)*.17);G.lineTo(Math.cos(a+.25)*.12,Math.sin(a+.25)*.12);G.lineTo(Math.cos(a+.45)*.12,Math.sin(a+.45)*.12);}G.closePath();fillS(K('#8a929e'),OL);circ(0,0,.04,'#2a1d16',null);G.restore();
+ }
+}
+function dWall(b,wm){
+ const arms=[];for(let i=0;i<6;i++)if(wm&(1<<i))arms.push(ANG[i]);
+ if(!arms.length)arms.push(0,Math.PI);
+ shadow(.85,.24,.04,.46);
+ for(let pass=0;pass<2;pass++){
+  G.save();if(!pass)G.translate(0,.15);
+  const top=pass?K('#aaa192'):K('#6f685c');
+  for(const a of arms){G.save();G.rotate(a);rect(0,-.17,.95,.34,top,OL);if(pass){bricks(0,-.17,.95,.34,2,4);G.fillStyle='rgba(255,255,255,.15)';G.fillRect(0,-.17,.95,.07);}G.restore();}
+  rect(-.27,-.27,.54,.54,top,OL);
+  if(pass){bricks(-.27,-.27,.54,.54,3,3);G.fillStyle='rgba(255,255,255,.18)';G.fillRect(-.27,-.27,.54,.08);
+   for(const [x,y] of [[-.27,-.27],[.15,-.27],[-.27,.15],[.15,.15]])rect(x,y,.12,.12,K('#b8af9f'),OL);}
+  G.restore();
+ }
+ if(b&&b.upg)upgMark();
+}
+// Which drawing each structure uses (STRUCTURES[id].icon in src/data/structures.js).
+// Each drawer is called in unit space with the context already translated and scaled.
+const STRUCTURE_ART = {
+  archer: (b, terr, wm) => dArcher(b),
+  cat:    (b, terr, wm) => dCat(b),
+  mage:   (b, terr, wm) => dMage(b),
+  scan:   (b, terr, wm) => dScan(b),
+  harv:   (b, terr, wm) => dHarv(b, terr),
+  wall:   (b, terr, wm) => dWall(b, wm || 0),
+};
+function drawBuilding(type,terr,b,S,wm){
+ setLW(lwu(S));setFLASH(!!(b&&b.flash>0));
+ STRUCTURE_ART[STRUCTURES[type].icon](b,terr,wm);
+ setFLASH(false);
+}
+
+// ===== src/render/icons.js =====
+// Code-drawn icons for the HUD, build menu and tech tree. Names are referenced from the data
+// tables (tech nodes / branches) and by the UI: add a drawing here to add an icon.
+// 'b:<structure id>:<terrain>' renders a structure as an icon.
+
+const ICONS={
+ gold(){circ(0,0,.85,'#f6cf4a','#8a6410');circ(0,0,.62,'#e0a820','#a57a10');G.beginPath();G.arc(0,0,.78,3.6,5.0);G.strokeStyle='rgba(255,255,255,.7)';G.lineWidth=.1;G.stroke();star(0,0,.4,'#fff1a0','#a57a10');},
+ wood(){G.save();G.rotate(-.5);rect(-.9,-.34,1.6,.68,'#8b5a2b',OL);line(-.7,-.12,.5,-.12,'rgba(255,255,255,.25)',.07);line(-.7,.14,.4,.14,'rgba(0,0,0,.25)',.07);ell(.7,0,.2,.34,'#e0b070',OL);ell(.7,0,.1,.18,null,'#a8763a');G.restore();},
+ stone(){poly([-.85,-.15,0,-.6,.85,-.15,0,.3],'#d3d8e0',OL);poly([-.85,-.15,0,.3,0,.85,-.85,.4],'#9aa1ac',OL);poly([0,.3,.85,-.15,.85,.4,0,.85],'#6c737e',OL);},
+ crystal(){gem(0,0,1.7);},
+ heart(){G.beginPath();G.moveTo(0,.8);G.bezierCurveTo(-1.2,-.1,-.7,-.9,0,-.4);G.bezierCurveTo(.7,-.9,1.2,-.1,0,.8);fillS('#e8453c','#6a1410');G.beginPath();G.ellipse(-.4,-.3,.2,.12,-.6,0,TAU);G.fillStyle='rgba(255,255,255,.55)';G.fill();},
+ flag(){line(-.5,-.85,-.5,.85,'#6a4a28',.12);poly([-.45,-.8,.75,-.45,-.45,.0],'#d83a3a',OL);},
+ star(){star(0,0,.9,'#ffd84a','#8a5a00');},
+ castle(){poly([-.8,.7,-.8,-.2,-.55,-.2,-.55,-.4,-.3,-.4,-.3,-.2,.3,-.2,.3,-.4,.55,-.4,.55,-.2,.8,-.2,.8,.7],'#c6c0b2',OL);G.beginPath();G.moveTo(-.2,.7);G.lineTo(-.2,.25);G.arc(0,.25,.2,Math.PI,0);G.lineTo(.2,.7);G.closePath();fillS('#3a2614',OL);line(0,-.2,0,-.9,'#3a2a1a',.1);poly([0,-.9,.6,-.7,0,-.5],'#d83a3a',OL);},
+ lock(){rect(-.5,-.1,1.0,.8,'#9aa1b4',OL);G.beginPath();G.arc(0,-.1,.32,Math.PI,0);G.strokeStyle='#9aa1b4';G.lineWidth=.16;G.stroke();circ(0,.3,.1,'#2a1d16',null);},
+ pick(){G.save();G.rotate(.6);line(0,.9,0,-.7,'#8b5a2b',.16);poly([-.8,-.5,0,-.95,.8,-.5,0,-.65],'#c3cad4',OL);G.restore();},
+ coins(){for(const [x,y] of [[-.1,.5],[-.1,.25],[-.1,0]])ell(x,y,.6,.25,'#f6cf4a',OL);ell(-.1,-.25,.6,.25,'#ffe27a',OL);G.fillStyle='#fff';G.font='bold .6px sans-serif';},
+ tag(){poly([-.8,-.2,-.2,-.8,.8,-.8,.8,.2,.2,.8],'#f6cf4a',OL);circ(.45,-.45,.1,'#2a1d16',null);G.fillStyle='#8a4a10';G.font='bold .8px sans-serif';G.textAlign='center';G.fillText('%',.0,.28);},
+ sword(){G.save();G.rotate(.78);poly([-.12,.4,-.12,-.8,0,-1.0,.12,-.8,.12,.4],'#dfe5ee',OL);rect(-.4,.38,.8,.14,'#c9a030',OL);rect(-.07,.5,.14,.4,'#6a4524',OL);G.restore();},
+ aim(){circ(0,0,.8,null,'#f0f0f0');circ(0,0,.5,null,'#e8574f');circ(0,0,.2,'#e8574f',OL);line(.1,-.1,.95,-.95,'#cfd4da',.1);poly([.95,-.95,.55,-.9,.9,-.55],'#8a929e',null);},
+ boom(){G.beginPath();for(let i=0;i<16;i++){const a=i*Math.PI/8,r=i%2?.45:.95;i?G.lineTo(Math.cos(a)*r,Math.sin(a)*r):G.moveTo(Math.cos(a)*r,Math.sin(a)*r);}G.closePath();fillS('#ff9a3a','#7a2a00');circ(0,0,.4,'#ffe27a',null);},
+ eye(){G.beginPath();G.moveTo(-.95,0);G.quadraticCurveTo(0,-.9,.95,0);G.quadraticCurveTo(0,.9,-.95,0);fillS('#f4f8ff',OL);circ(0,0,.38,'#2f8fe8',OL);circ(0,0,.16,'#0a1a2a',null);circ(-.12,-.12,.07,'#fff',null);},
+ beacon(){G.globalCompositeOperation='lighter';for(const a of [-.5,.5])for(const o of [0,Math.PI]){G.beginPath();G.moveTo(0,0);G.arc(0,0,.95,a+o-.2,a+o+.2);G.fillStyle='rgba(255,230,120,.7)';G.fill();}G.globalCompositeOperation='source-over';circ(0,0,.32,'#ffe27a',OL);},
+ heartplus(){ICONS.heart();rect(-.12,-.3,.24,.6,'#fff',null);rect(-.3,-.12,.6,.24,'#fff',null);}
+};
+const iconCache=new Map();
+function iconURL(name,px){
+ const k=name+'|'+px;let u=iconCache.get(k);if(u)return u;
+ const c=document.createElement('canvas');c.width=c.height=px*2;const g=c.getContext('2d');
+ const sG=G,sL=LW,sN=NOW;setG(g);setLW(.07);g.translate(px,px);
+ if(name.startsWith('b:')){const [ty,te]=name.slice(2).split(':');const sc=px*.88;g.translate(0,px*.2);g.scale(sc,sc);setNOW(0);drawBuilding(ty,te,null,40,0);}
+ else{g.scale(px*.82,px*.82);ICONS[name]();}
+ setG(sG);setLW(sL);setNOW(sN);u=c.toDataURL();iconCache.set(k,u);return u;
+}
+const icoEl=(n,px)=>{const i=new Image();i.src=iconURL(n,px);i.width=px;i.height=px;i.draggable=false;return i;};
+const icoHTML=(n,px)=>'<img src="'+iconURL(n,px)+'" width="'+px+'" height="'+px+'" draggable="false" alt="">';
+
+// ===== src/ui.js =====
+// HUD, build menu and tech panel. Plain DOM; art comes from render/icons.js.
+
+function closeMenu(){$('menu').style.display='none';view.sel=null;}
+function openTech(){if(st.phase!=='build'||st.over)return false;closeMenu();renderTech();$('tech').style.display='block';return true;}
+function closeTech(){$('tech').style.display='none';}
+// Wire the HUD buttons.
+function bindUI(){
+ $('tb').onclick=()=>{if($('tech').style.display==='block')closeTech();else openTech();};
+ $('go').onclick=startWave;
+ $('sp').onclick=()=>{st.speed=st.speed===1?2:1;};
+ $('re').onclick=newGame;
+ $('ctr').onclick=()=>{cam.x=0;cam.y=0;};
+}
+
+function costEl(o,free,nochk){
+ const d=document.createElement('span');d.className='cost';
+ if(free){d.innerHTML='<span class="fr">FREE</span>';return d;}
+ let any=false;
+ for(const k of RESOURCES)if(o[k]){any=true;const s=document.createElement('span');if(!nochk&&st[k]<o[k])s.className='no';s.appendChild(icoEl(k,15));s.appendChild(document.createTextNode(o[k]));d.appendChild(s);}
+ if(!any)d.textContent='free';
+ return d;
+}
+function menuBtn(m,icon,name,sub,cost,fn,dis,title){
+ const b=document.createElement('button');b.className='mi';b.disabled=!!dis;if(title)b.title=title;
+ const ib=document.createElement('span');ib.className='ib';ib.appendChild(icoEl(icon,40));b.appendChild(ib);
+ const tx=document.createElement('span');tx.className='tx';const nm=document.createElement('b');nm.textContent=name;tx.appendChild(nm);
+ if(sub){const sm=document.createElement('small');sm.textContent=sub[0];if(sub[1])sm.className='dm';tx.appendChild(sm);}
+ b.appendChild(tx);if(cost)b.appendChild(cost);
+ b.onclick=()=>{fn();closeMenu();};m.appendChild(b);return b;
+}
+function openMenu(c,px,py){
+ const m=$('menu');m.innerHTML='';
+ const t=document.createElement('div');t.className='t';m.appendChild(t);
+ if(!c.b){
+  t.textContent='Hex: '+c.terrain;
+  for(const k of Object.keys(STRUCTURES)){
+   const T=STRUCTURES[k];
+   const free=k==='scan'&&st.freeScan>0;
+   const allowed=T.allowedTerrain.includes(c.terrain);
+   let dis=!free&&!afford(k);if(!allowed)dis=true;
+   let sub=null;
+   if(!allowed)sub=[T.blockedHint||'not on this hex',1];
+   else if(T.terrainNote&&T.terrainNote[c.terrain])sub=[T.terrainNote[c.terrain]];
+   else if(T.terrainBonus&&T.terrainBonus.terrain===c.terrain)sub=['+'+Math.round((T.terrainBonus.damage-1)*100)+'% on this hex'];
+   const ic='b:'+k+':'+(allowed?c.terrain:T.allowedTerrain[0]);
+   menuBtn(m,ic,T.name,sub,costEl(costOf(k),free),()=>build(c,k),dis,T.description);
+  }
+ }else{
+  const b=c.b,T=STRUCTURES[b.type];
+  t.textContent=T.name+(b.upg?' (upgraded)':'')+'  HP '+Math.ceil(b.hp)+'/'+b.max+'  on '+c.terrain;
+  if(isTower(b)){const d=document.createElement('div');d.className='t';d.textContent='Damage '+tdmg(c).toFixed(1)+'  Range '+rangeHex(b)+(T.slow?'  Slow '+Math.round((1-T.slow.factor)*100)+'% '+slowDur(c).toFixed(1)+'s':'');m.appendChild(d);}
+  if(isTower(b)&&!b.upg)menuBtn(m,'star','Upgrade',[T.upgrade.text],costEl(T.upgrade.cost),()=>upgrade(c),!canPay(T.upgrade.cost));
+  menuBtn(m,'gold','Sell',null,costEl(refundOf(b.spent),false,true),()=>sell(c));
+ }
+ const cl=document.createElement('button');cl.textContent='Close';cl.onclick=closeMenu;m.appendChild(cl);
+ m.style.display='block';view.sel=c;
+ const mw=m.offsetWidth,mh=m.offsetHeight;
+ m.style.left=Math.max(4,Math.min(L.w-mw-4,px+12))+'px';
+ m.style.top=Math.max(4,Math.min(L.h-mh-4,py-mh/2))+'px';
+}
+const CHK='<svg viewBox="0 0 12 12"><path d="M2 6.5l2.5 2.5L10 3" stroke="#fff" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const LCK='<svg viewBox="0 0 12 12"><rect x="2.5" y="5.5" width="7" height="5" rx="1" fill="#fff"/><path d="M4 5.5V4a2 2 0 014 0v1.5" stroke="#fff" stroke-width="1.4" fill="none"/></svg>';
+function renderTech(){
+ const el=$('tech');
+ let h='<div class="in"><div class="hd"><h2>Research</h2><span class="pts">'+icoHTML('star',20)+'<span>'+st.rp+(st.rp===1?' pt':' pts')+'</span></span><button id="tx">Close</button></div><div class="tree"><div class="root">'+icoHTML('castle',34)+'</div><div class="cols">';
+ for(const br of TECH){
+  h+='<div class="col '+br.id+'"><div class="bh">'+icoHTML(br.icon,20)+'<span>'+br.name+'</span></div>';
+  br.nodes.forEach((n,i)=>{
+   const s=techState(n.id);
+   const prevOwned=!n.requires||has(n.requires);
+   h+='<div class="ln'+(prevOwned?' on':'')+'"></div>';
+   const cost=s==='own'?'Owned':s==='lock'?'Locked':n.cost+' pt'+(n.cost>1?'s':'');
+   h+='<button class="nd '+s+'" data-id="'+n.id+'"'+(s==='av'?'':' disabled')+'><span class="bd">'+(s==='own'?CHK:LCK)+'</span><span class="ni">'+icoHTML(n.icon,42)+'</span><span class="nn">'+n.name+'</span><span class="nx">'+n.txt+'</span><span class="cs">'+(s==='own'||s==='lock'?'':icoHTML('star',13))+cost+'</span></button>';
+  });
+  h+='</div>';
+ }
+ h+='</div></div><div class="nt">Earn 1 point per wave survived. Each node needs the previous one in its branch. Research is only possible between waves.</div></div>';
+ el.innerHTML=h;
+ $('tx').onclick=closeTech;
+ el.querySelectorAll('.nd').forEach(b=>b.onclick=()=>buyTech(b.dataset.id));
+}
+
+// ---- HUD
+function hud(){
+ $('rg').textContent=st.gold;$('rw').textContent=st.wood;$('rs').textContent=st.stone;$('rc').textContent=st.crystal;
+ $('hp').textContent=st.hp+'/'+st.maxhp;$('wv').textContent=st.wave;
+ const g=$('go');g.textContent=st.phase==='build'?'Start Wave '+st.wave:(st.over?'Game over':'Wave '+st.wave+' ('+(st.queue.length+st.enemies.length)+' left)');
+ g.disabled=st.phase!=='build';const tb=$('tb');tb.textContent='Tech ('+st.rp+')';tb.disabled=st.phase!=='build';tb.classList.toggle('pulse',st.rp>0&&st.phase==='build');$('sp').textContent='Speed '+st.speed+'x';
+ let h;
+ if(st.over)h='The castle has fallen.';
+ else if(st.phase==='wave')h='Wave in progress: building and selling are only possible in the build phase. Tap a tower to see its range.';
+ else{h='Build phase: tap a hex to build. Drag to pan, wheel/pinch to zoom. Spend research points under Tech. Enemies come from all sides.';
+  if(st.freeScan>0)h+=' You have 1 free scan tower.';}
+ const hv=view.hover||view.sel;if(hv&&hv.revealed&&!st.over)h+='  ['+hv.terrain+']';
+ if($('hint').textContent!==h)$('hint').textContent=h;
+}
+
+// ===== src/state.js =====
+// Game state and the economy: resources, building / selling / upgrading, tech purchase.
+// `st` is the single mutable game-state object (reset in place by newGame, never replaced).
+
+const st = {};                 // game state (see newGame for the fields)
+const cells = new Map();       // 'q,r' -> cell
+const cellList = [];           // every cell, in generation order
+const world = { d1: new Map(), d2: null, pathDirty: true }; // path fields, see path.js
+const view = { sel: null, hover: null };                     // selected / hovered cell
+
+// ---- tech helpers
+const has = id => !!(st && st.tech && st.tech[id]);
+// Value of an effect parameter from the first owned tech node that defines it, else `def`.
+function tech(effectKey, def) {
+ for (const n of TECH_NODES) if (has(n.id) && n.effect && effectKey in n.effect) return n.effect[effectKey];
+ return def;
+}
+const sightOf = t => (t === 'castle' ? CASTLE.sight : STRUCTURES[t].sight) + tech('sightBonus', 0);
+const isTower = b => !!(b && STRUCTURES[b.type].damage > 0);
+
+function newGame() {
+ generateMap();
+ reveal(0, 0, CASTLE.sight, 0);
+ for (const k of Object.keys(st)) delete st[k];
+ Object.assign(st, { gold: START_RESOURCES.gold, wood: START_RESOURCES.wood, stone: START_RESOURCES.stone, crystal: START_RESOURCES.crystal,
+  rp: 0, tech: {}, maxhp: CASTLE.maxHp, shake: 0, fx: [], coins: [], hp: CASTLE.maxHp, wave: 1, phase: 'build', freeScan: FREE_SCAN_TOWERS,
+  enemies: [], projs: [], floats: [], queue: [], spawnT: 0, a0: 0, spawnN: 0, speed: 1, over: false, flash: 0, time: 0 });
+ view.sel = null; view.hover = null; closeMenu(); closeTech(); $('over').style.display = 'none';
+ cam.x = 0; cam.y = 0; cam.z = 1; world.pathDirty = true; updS();
+}
+
+// ---- costs
+function costOf(t) { const T = STRUCTURES[t], k = tech('costMult', 1), o = {};
+ for (const r of RESOURCES) o[r] = T.cost[r] ? Math.max(1, Math.round(T.cost[r] * k)) : 0; return o; }
+function canPay(o) { return st.gold >= (o.gold || 0) && st.wood >= (o.wood || 0) && st.stone >= (o.stone || 0) && st.crystal >= (o.crystal || 0); }
+function pay(o) { st.gold -= o.gold || 0; st.wood -= o.wood || 0; st.stone -= o.stone || 0; st.crystal -= o.crystal || 0; }
+function afford(t) { return canPay(costOf(t)); }
+function fmt(o) { const a = []; if (o.gold) a.push(o.gold + 'g'); if (o.wood) a.push(o.wood + 'w'); if (o.stone) a.push(o.stone + 's'); if (o.crystal) a.push(o.crystal + 'c'); return a.join(' ') || 'free'; }
+function costStr(t) { return fmt(costOf(t)); }
+function refundOf(s) {
+ return { gold: Math.floor(s.gold * SELL_REFUND), wood: Math.floor(s.wood * SELL_REFUND), stone: Math.floor(s.stone * SELL_REFUND), crystal: Math.floor((s.crystal || 0) * SELL_REFUND) };
+}
+
+function flt(c, txt, col) { const p = W2(c.q, c.r); st.floats.push({ x: p.x, y: p.y, txt, col, t: 0 }); }
+
+// ---- actions
+function build(c, t) {
+ if (st.phase !== 'build' || st.over) return false;
+ if (!c || !c.revealed || c.b || c.terrain === 'castle') return false;
+ const T = STRUCTURES[t];
+ if (!T.allowedTerrain.includes(c.terrain)) return false;
+ let free = false;
+ if (t === 'scan' && st.freeScan > 0) free = true; else if (!afford(t)) return false;
+ const sp = { gold: 0, wood: 0, stone: 0, crystal: 0 };
+ if (!free) { const co = costOf(t); pay(co); Object.assign(sp, co); }
+ else st.freeScan--;
+ c.b = { type: t, hp: T.hp, max: T.hp, upg: 0, cd: .3, flash: 0, spent: sp, q0: c.q * 1.7 + c.r * .9 };
+ reveal(c.q, c.r, sightOf(t), 1.5);
+ world.pathDirty = true;
+ return true;
+}
+function sell(c) {
+ if (st.phase !== 'build' || !c.b) return;
+ const { gold: g, wood: w, stone: sn, crystal: cr } = refundOf(c.b.spent);
+ st.gold += g; st.wood += w; st.stone += sn; st.crystal += cr;
+ flt(c, 'sold +' + g + 'g' + (w ? ' +' + w + 'w' : '') + (sn ? ' +' + sn + 's' : '') + (cr ? ' +' + cr + 'c' : ''), '#fff'); c.b = null; world.pathDirty = true; }
+function upgrade(c) { const b = c.b;
+ if (st.phase !== 'build' || !b || b.upg || !isTower(b) || !canPay(STRUCTURES[b.type].upgrade.cost)) return false;
+ const u = STRUCTURES[b.type].upgrade.cost; pay(u); for (const k in u) b.spent[k] = (b.spent[k] || 0) + u[k]; b.upg = 1; return true; }
+
+function gameOver() { st.over = true; st.phase = 'over'; $('overt').textContent = 'Waves survived: ' + (st.wave - 1); $('over').style.display = 'flex'; closeMenu(); }
+
+// ---- tech tree
+const techNode = id => TECH_NODES.find(n => n.id === id) || null;
+function techState(id) { const n = techNode(id); if (has(id)) return 'own'; if (n.requires && !has(n.requires)) return 'lock'; return st.rp >= n.cost ? 'av' : 'poor'; }
+function buyTech(id) {
+ if (st.phase !== 'build' || st.over) return false; const n = techNode(id); if (!n) return false;
+ const s = techState(id); if (s !== 'av') return false;
+ st.rp -= n.cost; st.tech[id] = 1;
+ const ef = n.effect || {};
+ if (ef.sightBonus) { reveal(0, 0, sightOf('castle'), 1.5); for (const c of cellList) if (c.b) reveal(c.q, c.r, sightOf(c.b.type), 1.5); }
+ if (ef.maxHp) { st.maxhp += ef.maxHp; st.hp = Math.min(st.maxhp, st.hp + (ef.heal || 0)); }
+ renderTech(); return true;
+}
+
+// ===== src/render/enemies.js =====
+// Enemy drawings (code-drawn art). Each ENEMY_ART entry draws one enemy type in unit space;
+// ENEMIES[id].art in src/data/enemies.js picks which one is used.
+
+const ENEMY_ART = {
+ grunt(ph,atk){
+  const bob=Math.abs(Math.sin(ph))*.12;
+  ell(0,.95,.9,.28,'rgba(0,0,0,.3)',null);
+  G.translate(0,-bob);
+  circ(-.45+Math.sin(ph)*.25,.8,.28,K('#5a8a34'),OL);circ(.45-Math.sin(ph)*.25,.8,.28,K('#5a8a34'),OL);
+  G.save();G.translate(-.8,.1);G.rotate(atk?-.9+Math.sin(ph*2.2)*.9:-.5+Math.sin(ph)*.15);
+  line(0,0,0,-1.0,K('#7a4e26'),LW*3);circ(0,-1.05,.3,K('#6d4624'),OL);circ(-.1,-1.12,.06,'#cfc4a8',null);circ(.12,-.98,.06,'#cfc4a8',null);G.restore();
+  poly([-.85,-.2,-1.5,-.75,-.75,.2],K('#7bbf4a'),OL);poly([.85,-.2,1.5,-.75,.75,.2],K('#7bbf4a'),OL);
+  ell(0,.05,1,.9,K('#7bbf4a'),OL);
+  ell(.05,.4,.6,.45,K('#a8da74'),null);
+  G.beginPath();G.ellipse(0,.05,1,.9,0,-2.45,-.7);G.closePath();fillS(K('#c0392b'),OL);
+  circ(.0,-.1,.27,K('#fff'),OL);circ(.55,-.1,.27,K('#fff'),OL);
+  circ(.1,-.08,.12,K('#111'),null);circ(.65,-.08,.12,K('#111'),null);
+  line(-.25,-.38,.2,-.25,'#2a1d16',LW*1.3);line(.8,-.38,.35,-.25,'#2a1d16',LW*1.3);
+  poly([.1,.4,.5,.4,.45,.58,.35,.48,.25,.58,.15,.48],K('#fff'),OL);
+ },
+ runner(ph,atk){
+  const sw=Math.sin(ph),bob=Math.abs(Math.cos(ph))*.1;
+  G.globalAlpha=.55;for(const [y,l] of [[-.5,1.1],[0,1.5],[.5,1.0]]){line(-1.2-l*.6,y+.1,-.9,y+.1,K('#ffe6b0'),LW*1.4);}G.globalAlpha=1;
+  ell(0,1.0,.9,.25,'rgba(0,0,0,.3)',null);
+  G.translate(0,-bob);
+  line(-.1,.5,-.1+sw*.7,1.0,K('#c06a10'),LW*3.6);line(-.1,.5,-.1-sw*.7,1.0,K('#c06a10'),LW*3.6);
+  line(.2,-.2,.9-sw*.5,.1,K('#c06a10'),LW*3);
+  G.save();G.rotate(.55);ell(0,0,.55,1.0,K('#f0a030'),OL);ell(-.15,.1,.25,.6,'rgba(255,255,255,.2)',null);G.restore();
+  poly([.55,-.85,1.5,-1.0,.85,-.55],K('#f0a030'),OL);
+  circ(.7,-.65,.46,K('#f4b448'),OL);
+  circ(.85,-.72,.18,K('#fff'),OL);circ(.92,-.72,.08,K('#111'),null);
+  line(.6,-.98,1.05,-.86,'#2a1d16',LW*1.3);
+  line(.3,-.25,1.0,.35+sw*.3,K('#c06a10'),LW*3);
+ },
+ brute(ph,atk){
+  const bob=Math.abs(Math.sin(ph))*.07;
+  ell(0,1.0,1.2,.3,'rgba(0,0,0,.35)',null);
+  G.translate(0,-bob);
+  poly([-.8,.5,-.4,.5,-.45,1.0+Math.sin(ph)*.05,-.9,1.0],K('#4a2f66'),OL);poly([.8,.5,.4,.5,.45,1.0-Math.sin(ph)*.05,.9,1.0],K('#4a2f66'),OL);
+  poly([-1.0,-.6,1.0,-.6,1.2,.2,.7,.75,-.7,.75,-1.2,.2],K('#8a4fb0'),OL);
+  ell(-.2,-.1,.5,.5,'rgba(255,255,255,.14)',null);
+  poly([-.55,-.4,.55,-.4,.45,.35,-.45,.35],K('#6a6f7c'),OL);line(-.4,-.1,.4,-.1,'rgba(0,0,0,.35)',LW);line(0,-.4,0,.35,'rgba(0,0,0,.35)',LW);
+  for(const [x,y] of [[-.35,-.28],[.35,-.28],[-.3,.22],[.3,.22]])circ(x,y,.05,'#cfd4da',null);
+  rect(-.7,.4,1.4,.2,K('#4a3a22'),OL);rect(-.1,.38,.2,.24,K('#e0b84a'),OL);
+  G.save();G.translate(-1.15,-.2);G.rotate(Math.sin(ph)*.12);ell(0,.55,.38,.7,K('#7a3fa0'),OL);circ(0,1.2,.33,K('#8a4fb0'),OL);G.restore();
+  G.save();G.translate(1.15,-.2);G.rotate(atk?-1.2+Math.sin(ph*2)*.9:-Math.sin(ph)*.12);ell(0,.55,.38,.7,K('#7a3fa0'),OL);circ(0,1.2,.33,K('#8a4fb0'),OL);G.restore();
+  for(const sx of [-1,1]){circ(sx*1.0,-.55,.46,K('#5a606e'),OL);poly([sx*1.0-.12,-.95,sx*1.0,-1.35,sx*1.0+.12,-.95],K('#cfd4da'),OL);}
+  circ(0,-.85,.5,K('#8a4fb0'),OL);
+  for(const sx of [-1,1]){G.beginPath();G.moveTo(sx*.35,-1.15);G.quadraticCurveTo(sx*1.05,-1.2,sx*.95,-1.95);G.quadraticCurveTo(sx*.62,-1.45,sx*.18,-1.28);G.closePath();fillS(K('#ece3c8'),OL);}
+  poly([-.3,-.62,.3,-.62,.22,-.5,-.22,-.5],K('#2a1d16'),null);
+  line(-.35,-1.0,-.08,-.9,'#2a1d16',LW*1.4);line(.35,-1.0,.08,-.9,'#2a1d16',LW*1.4);
+  circ(-.2,-.87,.1,'#ff5a3a',null);circ(.2,-.87,.1,'#ff5a3a',null);},
+};
+function dEnemy(e,s,S){
+ const T=ENEMIES[e.t];setFLASH(e.flash>0);setFROST(e.slow>0&&!FLASH);
+ let dx=-e.x;
+ if(e.mode==='atk'&&e.tc)dx=W2(e.tc.q,e.tc.r).x-e.x;else if(e.mode==='move')dx=W2(e.tq,e.tr).x-e.fx;
+ if(Math.abs(dx)>.01)e.fl=dx<0?-1:1;const fl=e.fl||1;
+ const ph=e.ph||0,atk=e.mode==='atk';
+ const sc=T.r*S*T.drawScale;
+ setLW(Math.max(.07,1.3/sc));
+ if(FROST){ell(s.x,s.y+sc*.9,sc*1.2,sc*.45,'rgba(150,210,255,.45)','rgba(210,240,255,.9)');}
+ G.save();G.translate(s.x,s.y);G.scale(sc*fl,sc);
+  ENEMY_ART[T.art](ph,atk);
+ G.restore();setFLASH(false);setFROST(false);
+}
+function ebar(x,y,w,f,col){
+ const h=Math.max(3,.11*L.S);
+ G.fillStyle='rgba(10,10,16,.85)';G.fillRect(x-w/2-1,y-1,w+2,h+2);
+ G.fillStyle='#3a1a1a';G.fillRect(x-w/2,y,w,h);
+ G.fillStyle=col;G.fillRect(x-w/2,y,w*Math.max(0,f),h);
+ G.fillStyle='rgba(255,255,255,.3)';G.fillRect(x-w/2,y,w*Math.max(0,f),Math.max(1,h*.3));
+}
+
+// ===== src/render/tiles.js =====
+// Terrain tiles, painted once into small canvases and cached per terrain / variant / size / pixel ratio.
+
+// ---- tiles (cached per terrain / variant / size)
+function rng(seed){let s=(seed*2654435761)>>>0||1;return()=>{s^=s<<13;s^=s>>>17;s^=s<<5;return(s>>>0)/4294967296;};}
+const TI=Object.fromEntries(Object.keys(TERRAINS).map((id,i)=>[id,i]));
+function hexG(g,x,y,s){g.beginPath();for(let i=0;i<6;i++){const a=Math.PI/180*(60*i-30);const px=x+s*Math.cos(a),py=y+s*Math.sin(a);i?g.lineTo(px,py):g.moveTo(px,py);}g.closePath();}
+function tree(x,y,k){
+ ell(x+.06*k,y+.2*k,.24*k,.08*k,'rgba(0,0,0,.28)',null);
+ rect(x-.045*k,y+.05*k,.09*k,.2*k,'#6b4524',OL);
+ for(const [w,yy,h] of [[.27,.12,.3],[.22,-.08,.28],[.16,-.26,.26]]){
+  const cy=y+yy*k;
+  poly([x,cy-h*k,x-w*k,cy,x,cy],'#58a35a',null);poly([x,cy-h*k,x+w*k,cy,x,cy],'#2f6e3c',null);
+  poly([x,cy-h*k,x-w*k,cy,x+w*k,cy],null,OL);}
+}
+function rock(x,y,k,r){
+ const pts=[];const n=7;for(let i=0;i<n;i++){const a=i/n*TAU+r()*.3,rr=(.7+r()*.3)*k;pts.push(x+Math.cos(a)*rr,y+Math.sin(a)*rr*.75);}
+ ell(x+.06*k,y+.55*k,k*.95,k*.28,'rgba(0,0,0,.3)',null);
+ poly(pts,'#7b818a',null);
+ // facets: light top-left, dark bottom-right
+ G.save();G.beginPath();G.moveTo(pts[0],pts[1]);for(let i=2;i<pts.length;i+=2)G.lineTo(pts[i],pts[i+1]);G.closePath();G.clip();
+ G.fillStyle='rgba(235,240,250,.45)';G.beginPath();G.ellipse(x-.35*k,y-.4*k,k*.85,k*.55,-.5,0,TAU);G.fill();
+ G.fillStyle='rgba(20,24,34,.38)';G.beginPath();G.ellipse(x+.55*k,y+.5*k,k*.9,k*.55,-.5,0,TAU);G.fill();
+ G.restore();
+ poly(pts,null,'#2f3338');
+ line(x-.1*k,y-.1*k,x+.15*k,y+.2*k,'rgba(30,34,44,.5)',LW*.7);
+}
+function paintTile(g,terr,v,mode,S,cx,cy){
+ const r=S*.965,col=TERRAINS[terr].color,R=rng(v*131+TI[terr]*17+5);
+ g.save();g.translate(cx,cy);
+ const gr=g.createLinearGradient(0,-r,0,r);gr.addColorStop(0,col[0]);gr.addColorStop(1,col[1]);
+ hexG(g,0,0,r);g.fillStyle=gr;g.fill();
+ g.save();hexG(g,0,0,r);g.clip();
+ if(terr==='fog'){
+  for(let i=0;i<46;i++){const a=R()*TAU,d=Math.sqrt(R())*r;g.fillStyle=R()<.5?'rgba(255,255,255,.035)':'rgba(0,0,0,.28)';const sz=1+R()*2.2;g.fillRect(Math.cos(a)*d,Math.sin(a)*d,sz,sz);}
+  const vg=g.createRadialGradient(0,0,r*.2,0,0,r);vg.addColorStop(0,'rgba(40,50,80,.10)');vg.addColorStop(1,'rgba(0,0,0,.55)');g.fillStyle=vg;g.fillRect(-r,-r,2*r,2*r);
+ }else{
+  const hl=g.createRadialGradient(-r*.3,-r*.45,0,-r*.3,-r*.45,r*1.3);hl.addColorStop(0,'rgba(255,255,255,.2)');hl.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=hl;g.fillRect(-r,-r,2*r,2*r);
+  if(terr==='crystal'){const cg=g.createRadialGradient(0,0,0,0,0,r*.9);cg.addColorStop(0,'rgba(140,110,255,.45)');cg.addColorStop(1,'rgba(140,110,255,0)');g.fillStyle=cg;g.fillRect(-r,-r,2*r,2*r);}
+  if(terr==='plain'){for(let i=0;i<5;i++){g.fillStyle='rgba(90,70,40,.06)';g.beginPath();g.ellipse((R()-.5)*r*1.2,(R()-.5)*r*1.2,r*(.15+R()*.2),r*(.08+R()*.1),R()*3,0,TAU);g.fill();}}
+  if(terr==='castle'){g.strokeStyle='rgba(90,70,30,.22)';g.lineWidth=1;for(let i=1;i<5;i++){g.beginPath();g.arc(0,0,r*i/5,0,TAU);g.stroke();}}
+ }
+ g.restore();
+ // bevel
+ if(terr!=='fog'){
+  g.lineCap='butt';const w=Math.max(1.4,S*.07);
+  for(let i=0;i<6;i++){const a=Math.PI/3*i,n=[Math.cos(a),Math.sin(a)],f=-(n[0]+n[1])*.7071;
+   const a0=a-Math.PI/6,a1=a+Math.PI/6;
+   g.beginPath();g.moveTo(Math.cos(a0)*(r-w/2),Math.sin(a0)*(r-w/2));g.lineTo(Math.cos(a1)*(r-w/2),Math.sin(a1)*(r-w/2));
+   g.strokeStyle=f>0?'rgba(255,255,255,'+(.5*f)+')':'rgba(0,0,0,'+(.42*-f)+')';g.lineWidth=w;g.stroke();}
+  if(terr==='castle'){hexG(g,0,0,r*.84);g.strokeStyle='rgba(212,170,70,.85)';g.lineWidth=Math.max(1.5,S*.05);g.stroke();}
+ }
+ hexG(g,0,0,r);g.strokeStyle=terr==='fog'?'rgba(0,0,0,.6)':'rgba(30,24,16,.55)';g.lineWidth=1;g.stroke();
+ // terrain art (unit space)
+ if(mode&&terr!=='fog'&&terr!=='castle'){
+  g.save();if(mode===2){g.globalAlpha=.4;g.scale(.7,.7);}g.scale(S,S);
+  const sG=G,sL=LW;setG(g);setLW(lwu(S));
+  if(terr==='plain'){
+   for(let i=0;i<4;i++){const x=(R()-.5)*1.1,y=(R()-.5)*.9,k=.04+R()*.05;
+    ell(x+.015,y+.02,k*1.3,k*.8,'rgba(0,0,0,.22)',null);ell(x,y,k*1.3,k*.9,i%2?'#9a8f79':'#8a7f6a',null);ell(x-k*.3,y-k*.3,k*.55,k*.35,'rgba(255,255,255,.4)',null);}
+   for(let i=0;i<3;i++){const x=(R()-.5)*1.1,y=(R()-.5)*.9;line(x,y,x+.06,y+.01,'rgba(90,70,40,.35)',LW*.8);line(x+.02,y+.03,x+.07,y+.04,'rgba(90,70,40,.3)',LW*.8);}
+  }else if(terr==='wood'){
+   const o=[[-.34,.12,1.0],[.32,.2,1.05],[.0,-.22,.88]];const j=(v%4)*.03;
+   o.sort((a,b)=>a[1]-b[1]);for(const t of o)tree(t[0]+(j-.04),t[1],t[2]);
+  }else if(terr==='stone'){
+   rock(-.3,.2,.3,R);rock(.3,.22,.34,R);rock(0,-.15,.28,R);if(v&1)rock(-.45,-.25,.14,R);else rock(.5,-.2,.13,R);
+  }else if(terr==='crystal'){
+   gem(-.02,.0,1.1);gem(-.34,.22,.55);gem(.3,.26,.46);
+   G.fillStyle='rgba(255,255,255,.9)';star(.22,-.3,.07,'#fff',null);
+  }
+  setG(sG);setLW(sL);g.restore();
+ }
+ g.restore();
+}
+const TC=new Map();let tcCur=null,tcSq=0,tcDpr=0;
+function tileFor(terr,v,mode,S){
+ const sq=Math.max(8,Math.round(S*2)/2),dpr=L.dpr;
+ if(sq!==tcSq||dpr!==tcDpr){const k=sq+'|'+dpr;tcCur=TC.get(k);if(!tcCur){if(TC.size>10)TC.clear();tcCur=[];TC.set(k,tcCur);}tcSq=sq;tcDpr=dpr;}
+ const idx=TI[terr]*12+v*3+mode;let t=tcCur[idx];if(t)return t;
+ const w=Math.ceil(2*sq*dpr)+2,c=document.createElement('canvas');c.width=c.height=w;
+ const g=c.getContext('2d');g.scale(dpr,dpr);const half=w/dpr/2;
+ paintTile(g,terr,v,mode,sq,half,half);
+ t={cv:c,sq,half,w:w/dpr};tcCur[idx]=t;return t;
+}
+
+// ===== src/render/effects.js =====
+// Projectiles, particles, flying coins and floating text. Each function draws one layer
+// on top of the scene (all take the current hex size in pixels).
+
+function drawProjectiles(S){
+ for(const p of st.projs){const k=Math.min(1,p.t/p.dur),x=p.x0+(p.x1-p.x0)*k,y=p.y0+(p.y1-p.y0)*k;
+  const s=scr(x,y);
+  if(p.kind==='bolt'){
+   ctx.globalCompositeOperation='lighter';
+   for(let j=4;j>=1;j--){const kk=Math.max(0,k-.06*j),q=scr(p.x0+(p.x1-p.x0)*kk,p.y0+(p.y1-p.y0)*kk);ctx.fillStyle='rgba(170,100,255,'+(.4-j*.07)+')';ctx.beginPath();ctx.arc(q.x,q.y,S*(.16-j*.02),0,TAU);ctx.fill();}
+   ctx.fillStyle='rgba(180,110,255,.35)';ctx.beginPath();ctx.arc(s.x,s.y,S*.3,0,TAU);ctx.fill();
+   ctx.globalCompositeOperation='source-over';
+   ctx.fillStyle='#b266ff';ctx.beginPath();ctx.arc(s.x,s.y,S*.15,0,TAU);ctx.fill();ctx.fillStyle='#f2e0ff';ctx.beginPath();ctx.arc(s.x,s.y,S*.07,0,TAU);ctx.fill();}
+  else if(p.kind==='arrow'){
+   const ang=Math.atan2(p.y1-p.y0,p.x1-p.x0),L2=S*.5;
+   ctx.save();ctx.translate(s.x,s.y);ctx.rotate(ang);
+   ctx.strokeStyle='rgba(255,255,255,.25)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(-L2*1.6,0);ctx.lineTo(-L2*.5,0);ctx.stroke();
+   ctx.strokeStyle='#e8dcc0';ctx.lineWidth=Math.max(1.5,S*.06);ctx.lineCap='round';ctx.beginPath();ctx.moveTo(-L2*.5,0);ctx.lineTo(L2*.4,0);ctx.stroke();
+   ctx.fillStyle='#d4dae2';ctx.strokeStyle='#2a1d16';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(L2*.65,0);ctx.lineTo(L2*.35,-S*.08);ctx.lineTo(L2*.35,S*.08);ctx.closePath();ctx.fill();ctx.stroke();
+   ctx.fillStyle='#d44';ctx.beginPath();ctx.moveTo(-L2*.5,0);ctx.lineTo(-L2*.72,-S*.07);ctx.lineTo(-L2*.6,0);ctx.lineTo(-L2*.72,S*.07);ctx.closePath();ctx.fill();
+   ctx.restore();}
+  else{
+   const h=Math.sin(k*Math.PI),rr=S*(.12+.05*h);
+   ctx.fillStyle='rgba(0,0,0,'+(.3-.15*h)+')';ctx.beginPath();ctx.ellipse(s.x,s.y+S*.05,rr*(1.1-.3*h),rr*.5,0,0,TAU);ctx.fill();
+   const by=s.y-h*.9*S;
+   ctx.fillStyle='#8a8f98';ctx.strokeStyle='#2a2d33';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(s.x,by,rr,0,TAU);ctx.fill();ctx.stroke();
+   ctx.fillStyle='rgba(255,255,255,.45)';ctx.beginPath();ctx.arc(s.x-rr*.3,by-rr*.3,rr*.35,0,TAU);ctx.fill();
+   ctx.strokeStyle='rgba(30,30,36,.6)';ctx.beginPath();ctx.moveTo(s.x-rr*.2+Math.cos(p.t*9)*rr*.5,by);ctx.lineTo(s.x+rr*.4,by+rr*.5);ctx.stroke();}}
+}
+function drawFx(S){
+ for(const f of st.fx){const s=scr(f.x,f.y),k=f.t/f.life;
+  if(f.k==='pop'){ctx.strokeStyle=f.col;ctx.globalAlpha=1-k;ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(s.x,s.y,S*(.15+.5*k),0,7);ctx.stroke();ctx.globalAlpha=1;}
+  else if(f.k==='dust'){
+   for(let i=0;i<8;i++){const a=i*.785+.3,d=(.2+.65*Math.sqrt(k))*(i%2?1:.7),r=S*(.1+.17*k);
+    ctx.globalAlpha=(1-k)*.6;ctx.fillStyle=i%3?'#b9a88c':'#8f8068';ctx.beginPath();ctx.arc(s.x+Math.cos(a)*d*S,s.y+Math.sin(a)*d*S*.6-k*.25*S,r,0,TAU);ctx.fill();}
+   ctx.globalAlpha=1;}
+  else{const q=scr(f.x+f.vx*f.t,f.y+f.vy*f.t);ctx.globalAlpha=1-k;ctx.fillStyle=f.col;ctx.fillRect(q.x-2,q.y-2,4,4);ctx.globalAlpha=1;}}
+}
+function drawCoins(S){
+ if(st.coins.length){const r=cv.getBoundingClientRect(),g=$('rg').getBoundingClientRect(),tx=g.left-r.left+g.width/2,ty=g.top-r.top+g.height/2;
+  for(const f of st.coins){const s=scr(f.x,f.y),k=Math.min(1,f.t/f.life),e=k*k;const x=s.x+(tx-s.x)*e,y=s.y+(ty-s.y)*e-Math.sin(k*Math.PI)*20;
+   ctx.fillStyle='#f1c84b';ctx.strokeStyle='#8a6d10';ctx.lineWidth=1;ctx.beginPath();ctx.arc(x,y,4,0,7);ctx.fill();ctx.stroke();}}
+}
+function drawFloats(S){
+ ctx.textAlign='center';ctx.font='bold '+Math.max(11,S*.4)+'px system-ui';
+ for(const f of st.floats){const s=scr(f.x,f.y);
+  if(f.ring){ctx.strokeStyle='rgba(255,170,100,'+(1-f.t/.35)+')';ctx.lineWidth=3;ctx.beginPath();ctx.arc(s.x,s.y,f.rad*S*(f.t/.35+.2),0,7);ctx.stroke();continue;}
+  ctx.globalAlpha=Math.max(0,1-f.t/1.4);ctx.fillStyle='#000';ctx.fillText(f.txt,s.x+1,s.y-f.t*S*.6+1);ctx.fillStyle=f.col;ctx.fillText(f.txt,s.x,s.y-f.t*S*.6);ctx.globalAlpha=1;}
+}
+
+// ===== src/render/scene.js =====
+// Draws one frame: tiles and fog, structures, range rings, enemies, then the effect layers.
+
+function hexPath(x,y,s){ctx.beginPath();for(let i=0;i<6;i++){const a=Math.PI/180*(60*i-30);const px=x+s*Math.cos(a),py=y+s*Math.sin(a);i?ctx.lineTo(px,py):ctx.moveTo(px,py);}ctx.closePath();}
+function bar(x,y,w,f,col){
+ const h=Math.max(3,.1*L.S);
+ ctx.fillStyle='rgba(10,10,16,.88)';ctx.fillRect(x-w/2-1,y-1,w+2,h+2);
+ ctx.fillStyle='#3a1a1a';ctx.fillRect(x-w/2,y,w,h);
+ f=Math.max(0,f);ctx.fillStyle=f>.6?'#5fd35f':f>.3?'#e8c840':'#e85a4a';ctx.fillRect(x-w/2,y,w*f,h);
+ ctx.fillStyle='rgba(255,255,255,.3)';ctx.fillRect(x-w/2,y,w*f,Math.max(1,h*.3));
+}
+const edges=[],blist=[];
+function draw(){
+ const S=L.S;ctx.setTransform(L.dpr,0,0,L.dpr,0,0);setG(ctx);setNOW(performance.now()/1000);setLW(lwu(S));
+ ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';
+ ctx.fillStyle='#0b0e14';ctx.fillRect(0,0,L.w,L.h);
+ if(st.shake>0){const m=Math.min(6,st.shake*20);ctx.translate((Math.random()-.5)*2*m,(Math.random()-.5)*2*m);}
+ const mg=S*1.2;
+ const vis=(s)=>s.x>-mg&&s.x<L.w+mg&&s.y>-mg&&s.y<L.h+mg;
+ edges.length=0;blist.length=0;
+ const hot=[];
+ for(const c of cellList){
+  const p=W2(c.q,c.r),s=scr(p.x,p.y);
+  if(!vis(s))continue;
+  let t;
+  if(!c.revealed)t=tileFor('fog',c.v,0,S);
+  else{t=tileFor(c.terrain,c.v,c.terrain==='castle'?0:c.b?2:1,S);
+   for(let i=0;i<6;i++){const n=c.nb[i];if(n&&!n.revealed)edges.push(s.x,s.y,i);}
+   if(c.newT>0)hot.push(s.x,s.y,c.newT);
+   if(c.b||c.terrain==='castle')blist.push(c);
+   else if(c.terrain==='crystal'){const gl=.1+.07*Math.sin(NOW*2.5+c.q+c.r*2);ctx.globalCompositeOperation='lighter';ctx.fillStyle='rgba(150,110,255,'+gl+')';ctx.beginPath();ctx.arc(s.x,s.y,S*.55,0,TAU);ctx.fill();
+    const tw=Math.max(0,Math.sin(NOW*3+c.q*2.1+c.r));ctx.fillStyle='rgba(255,255,255,'+tw*.9+')';const sx=s.x+S*.22,sy=s.y-S*.3,r=S*.09*tw;ctx.fillRect(sx-r,sy-.8,r*2,1.6);ctx.fillRect(sx-.8,sy-r,1.6,r*2);ctx.globalCompositeOperation='source-over';}
+  }
+  const dp=L.dpr;ctx.drawImage(t.cv,Math.round((s.x-t.half)*dp)/dp,Math.round((s.y-t.half)*dp)/dp,t.w,t.w);
+ }
+ // soft fog edge
+ if(edges.length){
+  for(const [lw,al] of [[.34,.12],[.16,.22]]){
+   ctx.beginPath();
+   for(let j=0;j<edges.length;j+=3){const a=ANG[edges[j+2]],a0=a-Math.PI/6,a1=a+Math.PI/6,r=S*.94;
+    ctx.moveTo(edges[j]+Math.cos(a0)*r,edges[j+1]+Math.sin(a0)*r);ctx.lineTo(edges[j]+Math.cos(a1)*r,edges[j+1]+Math.sin(a1)*r);}
+   ctx.strokeStyle='rgba(4,6,12,'+al*2+')';ctx.lineWidth=S*lw;ctx.lineCap='butt';ctx.stroke();}
+ }
+ for(let j=0;j<hot.length;j+=3){hexPath(hot[j],hot[j+1],S*.94);ctx.strokeStyle='rgba(255,255,255,'+Math.min(1,hot[j+2])+')';ctx.lineWidth=3;ctx.stroke();}
+ // buildings (back to front)
+ blist.sort((a,b)=>a.r-b.r);
+ for(const c of blist){const b=c.b,p=W2(c.q,c.r),s=scr(p.x,p.y);
+  ctx.save();ctx.translate(s.x,s.y);ctx.scale(S,S);
+  if(!b)dCastle(S);else drawBuilding(b.type,c.terrain,b,S,b.wm||0);
+  ctx.restore();
+  if(b&&b.hp<b.max)bar(s.x,s.y+.62*S,.9*S,b.hp/b.max);
+ }
+ // range
+ const rc=view.sel||view.hover;
+ if(rc&&isTower(rc.b)){const p=W2(rc.q,rc.r),s=scr(p.x,p.y);
+  ctx.beginPath();ctx.arc(s.x,s.y,trange(rc.b)*S,0,7);ctx.fillStyle='rgba(255,255,255,.08)';ctx.fill();ctx.strokeStyle='rgba(255,255,255,.6)';ctx.lineWidth=2;ctx.stroke();}
+ if(rc){const p=W2(rc.q,rc.r),s=scr(p.x,p.y);hexPath(s.x,s.y,S*.95);ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();}
+ // enemies
+ const es=st.enemies.slice().sort((a,b)=>a.y-b.y);
+ for(const e of es){const T=ENEMIES[e.t],s=scr(e.x,e.y);
+  if(!vis(s))continue;
+  dEnemy(e,s,S);
+  if(e.hp<e.max)ebar(s.x,s.y-T.barOffset*S-.14*S,.6*S,e.hp/e.max,'#e55');}
+ drawProjectiles(S);
+ // castle hit flash
+ if(st.flash>0){const s=scr(0,0);hexPath(s.x,s.y,S*.95);ctx.fillStyle='rgba(255,50,50,'+Math.min(.6,st.flash*2)+')';ctx.fill();}
+ drawFx(S);
+ drawCoins(S);
+ drawFloats(S);
+}
+
+// ===== src/input.js =====
+// Pointer input: tap to select / build, drag to pan, wheel and pinch to zoom.
+
+function ptr(ev){const r=cv.getBoundingClientRect();return {x:ev.clientX-r.left,y:ev.clientY-r.top};}
+const ptrs=new Map(); let moved=false, lastPinch=0;
+const TAP_PX=8;
+function endPtr(ev,cancel){
+ const e=ptrs.get(ev.pointerId);if(!e)return;
+ const p=ptr(ev);const wasSingle=ptrs.size===1;
+ ptrs.delete(ev.pointerId);
+ for(const o of ptrs.values()){o.sx=o.x;o.sy=o.y;}
+ if(wasSingle&&!moved&&!cancel)tap(p.x,p.y,e.type);
+}
+function tap(px,py,type){
+ if(st.over)return;const c=pick(px,py);
+ view.hover=type==='mouse'?c:null;
+ if(!c||!c.revealed||c.terrain==='castle'){view.sel=null;closeMenu();return;}
+ if(st.phase!=='build'){closeMenu();view.sel=c;return;} // wave: only show range
+ view.sel=c;openMenu(c,px,py);
+}
+
+// Attach the pointer / wheel / resize listeners (called once from main.js).
+function initInput(){
+cv.addEventListener('pointerdown',ev=>{
+ ev.preventDefault();const p=ptr(ev);
+ try{cv.setPointerCapture(ev.pointerId);}catch(e){}
+ ptrs.set(ev.pointerId,{x:p.x,y:p.y,sx:p.x,sy:p.y,type:ev.pointerType});
+ if(ptrs.size===1)moved=false;
+ else{moved=true;closeMenu();const a=[...ptrs.values()];lastPinch=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y)||1;}
+});
+cv.addEventListener('pointermove',ev=>{
+ const p=ptr(ev);const e=ptrs.get(ev.pointerId);
+ if(ev.pointerType==='mouse'&&!e)view.hover=pick(p.x,p.y);
+ if(!e)return;
+ if(ptrs.size===1){
+  if(!moved&&Math.hypot(p.x-e.sx,p.y-e.sy)>TAP_PX){moved=true;closeMenu();e.x=e.sx;e.y=e.sy;}
+  if(moved){cam.x-=(p.x-e.x)/L.S;cam.y-=(p.y-e.y)/L.S;clampCam();view.hover=null;}
+  e.x=p.x;e.y=p.y;
+ }else if(ptrs.size===2){
+  const a=[...ptrs.values()];const o=a[0]===e?a[1]:a[0];
+  const mx0=(e.x+o.x)/2,my0=(e.y+o.y)/2;
+  e.x=p.x;e.y=p.y;
+  const mx=(e.x+o.x)/2,my=(e.y+o.y)/2,dist=Math.hypot(e.x-o.x,e.y-o.y)||1;
+  cam.x-=(mx-mx0)/L.S;cam.y-=(my-my0)/L.S;
+  zoomAt(mx,my,dist/lastPinch);lastPinch=dist;
+ }
+});
+cv.addEventListener('pointerup',ev=>endPtr(ev,false));
+cv.addEventListener('pointercancel',ev=>endPtr(ev,true));
+cv.addEventListener('pointerleave',ev=>{if(ev.pointerType==='mouse')view.hover=null;});
+cv.addEventListener('wheel',ev=>{ev.preventDefault();const p=ptr(ev);zoomAt(p.x,p.y,Math.exp(-ev.deltaY*.0015));},{passive:false});
+window.addEventListener('resize',resize);
+}
+
+// ===== src/main.js =====
+// Entry point: boots the game, runs the frame loop and exposes `window.game` for debugging/tests.
+
+let last = performance.now();
+function frame(t) {
+ let dt = Math.min(.1, (t - last) / 1000) * st.speed; last = t;
+ try { const n = Math.max(1, Math.ceil(dt / .033)); for (let i = 0; i < n; i++) update(dt / n); draw(); hud(); } catch (e) { console.error(e); }
+ requestAnimationFrame(frame);
+}
+
+bindUI(); initInput();
+newGame(); resize(); document.querySelectorAll('[data-ic]').forEach(e => e.appendChild(icoEl(e.dataset.ic, 20))); requestAnimationFrame(frame);
+
+window.game = { st: () => st, cells: () => cells, cam: () => cam, build: (q, r, t) => build(cells.get(key(q, r)), t), upgrade: (q, r) => upgrade(cells.get(key(q, r))),
+ sell: (q, r) => sell(cells.get(key(q, r))), start: startWave,
+ step: (sec) => { const n = Math.ceil(sec / .033); for (let i = 0; i < n; i++) update(sec / n); },
+ screen: (q, r) => { const p = W2(q, r), s = scr(p.x, p.y), b = cv.getBoundingClientRect(); return { x: b.left + s.x, y: b.top + s.y }; },
+ spawnRing, waveCount, hpMult, newGame, buyTech, openTech, closeTech, has, costOf, techState, tdmg: (q, r) => tdmg(cells.get(key(q, r))), rangeHex: (q, r) => rangeHex(cells.get(key(q, r)).b), TECH };
+
+})();
+</script></body></html>

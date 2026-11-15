@@ -32,6 +32,7 @@ Hexkeep is an original hex-board castle defense game. You explore outward from a
 
 - **Towers:** Archer (fast, hits air), Catapult (splash, ground only), Mage (slows, pierces armor), Ballista (huge range, pierces armor, priority targeting), Wall (2 gold).
 - **Mazing (built 2026-11-15):** every structure blocks enemies on foot, so they walk around your buildings and re-route when something is built or destroyed. During the build phase dotted lines show the current routes. A build that would leave no open trail from the map edge to the castle is refused, and the build menu says so. An enemy that is somehow cut off (for example spawned in a pocket) breaks through the cheapest structures.
+- **Built hexes** get a dark plate with a rim coloured by kind (towers orange, walls stone, harvesters green, scan towers blue). The "Show built" button dims every empty hex and shows a legend.
 - **Wave preview:** the bottom bar shows the next wave's enemies; new types glow.
 - **Tech:** you earn 1 point per wave. There are three branches (Economy, Defense, Vision) with three nodes each.
 

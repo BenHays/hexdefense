@@ -5,6 +5,7 @@ import { st, cellList, view, isTower, world } from '../state.js';
 import { L, scr } from '../camera.js';
 import { trange } from '../combat.js';
 import { ENEMIES } from '../data/enemies.js';
+import { STRUCTURES } from '../data/structures.js';
 import { TAU, NOW, lwu, setG, setNOW, setLW } from './prims.js';
 import { dCastle, drawBuilding } from './structures.js';
 import { ebar, dEnemy } from './enemies.js';
@@ -19,6 +20,9 @@ function bar(x,y,w,f,col){
  f=Math.max(0,f);ctx.fillStyle=f>.6?'#5fd35f':f>.3?'#e8c840':'#e85a4a';ctx.fillRect(x-w/2,y,w*f,h);
  ctx.fillStyle='rgba(255,255,255,.3)';ctx.fillRect(x-w/2,y,w*f,Math.max(1,h*.3));
 }
+// rim colour of a built hex, by kind (see the legend in the "Show built" toggle)
+export const PLATE={tower:'#ff8a4a',wall:'#cfc6b4',harv:'#8fe06a',scan:'#6ab8ff'};
+function plateColor(b){const T=STRUCTURES[b.type];return T.damage?PLATE.tower:T.blocksPath?PLATE.wall:T.yield?PLATE.harv:PLATE.scan;}
 const edges=[],blist=[];
 export function draw(){
  const S=L.S;ctx.setTransform(L.dpr,0,0,L.dpr,0,0);setG(ctx);setNOW(performance.now()/1000);setLW(lwu(S));
@@ -59,6 +63,13 @@ export function draw(){
    for(const rt of world.routes){ctx.beginPath();rt.forEach((c,i)=>{const p=W2(c.q,c.r),s=scr(p.x,p.y);i?ctx.lineTo(s.x,s.y):ctx.moveTo(s.x,s.y);});ctx.stroke();}}
   ctx.restore();
  }
+ // built hexes: a dark foundation plate with a rim coloured by kind, so built vs empty is obvious.
+ // With "Show built" on, every empty hex is dimmed as well.
+ if(view.showBuilt){ctx.fillStyle='rgba(6,8,14,.62)';
+  for(const c of cellList){if(!c.revealed||c.b||c.terrain==='castle')continue;const p=W2(c.q,c.r),s=scr(p.x,p.y);if(!vis(s))continue;hexPath(s.x,s.y,S*.97);ctx.fill();}}
+ for(const c of blist){if(!c.b)continue;const p=W2(c.q,c.r),s=scr(p.x,p.y);
+  hexPath(s.x,s.y,S*.9);ctx.fillStyle='rgba(20,26,40,.42)';ctx.fill();
+  hexPath(s.x,s.y,S*.86);ctx.strokeStyle=plateColor(c.b);ctx.lineWidth=Math.max(2,S*(view.showBuilt?.13:.08));ctx.stroke();}
  // buildings (back to front)
  blist.sort((a,b)=>a.r-b.r);
  for(const c of blist){const b=c.b,p=W2(c.q,c.r),s=scr(p.x,p.y);

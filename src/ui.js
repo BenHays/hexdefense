@@ -11,6 +11,7 @@ import { wouldSeal } from './path.js';
 import { ENEMIES } from './data/enemies.js';
 import { BOSS_EVERY } from './data/waves.js';
 import { icoEl, icoHTML } from './render/icons.js';
+import { PLATE } from './render/scene.js';
 
 export function closeMenu(){$('menu').style.display='none';view.sel=null;}
 export function openTech(){if(st.phase!=='build'||st.over)return false;closeMenu();renderTech();$('tech').style.display='block';return true;}
@@ -22,6 +23,8 @@ export function bindUI(){
  $('sp').onclick=()=>{st.speed=st.speed===1?2:1;};
  $('re').onclick=newGame;
  $('ctr').onclick=()=>{cam.x=0;cam.y=0;};
+ $('legend').innerHTML=[['tower','Towers'],['wall','Walls'],['harv','Harvesters'],['scan','Scan towers']].map(([k,n])=>'<span><i style="border-color:'+PLATE[k]+'"></i>'+n+'</span>').join('');
+ $('vb').onclick=()=>{view.showBuilt=!view.showBuilt;$('vb').classList.toggle('on',view.showBuilt);$('legend').classList.toggle('on',view.showBuilt);};
 }
 
 export function costEl(o,free,nochk){

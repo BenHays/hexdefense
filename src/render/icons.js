@@ -3,6 +3,8 @@
 // 'b:<structure id>:<terrain>' renders a structure as an icon.
 import { TAU, G, LW, NOW, OL, circ, rect, poly, ell, line, star, gem, fillS, setG, setLW, setNOW } from './prims.js';
 import { drawBuilding } from './structures.js';
+import { ENEMY_ART } from './enemies.js';
+import { ENEMIES } from '../data/enemies.js';
 
 export const ICONS={
  gold(){circ(0,0,.85,'#f6cf4a','#8a6410');circ(0,0,.62,'#e0a820','#a57a10');G.beginPath();G.arc(0,0,.78,3.6,5.0);G.strokeStyle='rgba(255,255,255,.7)';G.lineWidth=.1;G.stroke();star(0,0,.4,'#fff1a0','#a57a10');},
@@ -30,6 +32,7 @@ export function iconURL(name,px){
  const c=document.createElement('canvas');c.width=c.height=px*2;const g=c.getContext('2d');
  const sG=G,sL=LW,sN=NOW;setG(g);setLW(.07);g.translate(px,px);
  if(name.startsWith('b:')){const [ty,te]=name.slice(2).split(':');const sc=px*.88;g.translate(0,px*.2);g.scale(sc,sc);setNOW(0);drawBuilding(ty,te,null,40,0);}
+ else if(name.startsWith('e:')){g.translate(0,-px*.05);g.scale(px*.5,px*.5);setNOW(.3);ENEMY_ART[ENEMIES[name.slice(2)].art](.6,false);}
  else{g.scale(px*.82,px*.82);ICONS[name]();}
  setG(sG);setLW(sL);setNOW(sN);u=c.toDataURL();iconCache.set(k,u);return u;
 }

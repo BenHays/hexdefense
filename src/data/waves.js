@@ -36,3 +36,10 @@ export const spawnGap = w => Math.max(SPAWN_GAP_MIN, SPAWN_GAP_START - SPAWN_GAP
 export const SPAWN_RING_MARGIN = 2;    // enemies spawn this many hexes beyond the revealed area
 export const SPAWN_ANGLE_STEP = 2.399963; // golden angle: spreads spawns around the castle
 export const SPAWN_ANGLE_JITTER = 0.5;
+
+// ---- what each wave contains (see waveComposition in src/waves.js)
+export const BOSS_EVERY = 5;           // a boss closes every 5th wave
+export const INTRO_RAMP_WAVES = 3;     // a new type reaches its full `share` over this many waves
+export const INTRO_MIN = 2;            // a type's first wave always has at least this many slots
+export const SPECIAL_CAP = 0.7;        // at most this share of slots go to non-grunt types
+export const BOSS_HP_PER_BOSS = 0.5;   // each later boss gets +50% base hp on top of the wave scaling

@@ -6,7 +6,10 @@ import { $ } from './dom.js';
 import { L, cam } from './camera.js';
 import { st, view, has, costOf, afford, canPay, refundOf, build, sell, upgrade, isTower, techState, buyTech, newGame } from './state.js';
 import { tdmg, rangeHex, slowDur } from './combat.js';
-import { startWave } from './waves.js';
+import { startWave, waveComposition, newTypes } from './waves.js';
+import { wouldSeal } from './path.js';
+import { ENEMIES } from './data/enemies.js';
+import { BOSS_EVERY } from './data/waves.js';
 import { icoEl, icoHTML } from './render/icons.js';
 
 export function closeMenu(){$('menu').style.display='none';view.sel=null;}
@@ -33,7 +36,7 @@ export function menuBtn(m,icon,name,sub,cost,fn,dis,title){
  const b=document.createElement('button');b.className='mi';b.disabled=!!dis;if(title)b.title=title;
  const ib=document.createElement('span');ib.className='ib';ib.appendChild(icoEl(icon,40));b.appendChild(ib);
  const tx=document.createElement('span');tx.className='tx';const nm=document.createElement('b');nm.textContent=name;tx.appendChild(nm);
- if(sub){const sm=document.createElement('small');sm.textContent=sub[0];if(sub[1])sm.className='dm';tx.appendChild(sm);}
+ if(sub){const sm=document.createElement('small');sm.textContent=sub[0];if(sub[1])sm.className=sub[1]===2?'gv':'dm';tx.appendChild(sm);}
  b.appendChild(tx);if(cost)b.appendChild(cost);
  b.onclick=()=>{fn();closeMenu();};m.appendChild(b);return b;
 }
@@ -42,15 +45,19 @@ export function openMenu(c,px,py){
  const t=document.createElement('div');t.className='t';m.appendChild(t);
  if(!c.b){
   t.textContent='Hex: '+c.terrain;
+  const seals=wouldSeal(c);
+  if(seals){const d=document.createElement('div');d.className='t warn';d.textContent='Building here would seal the castle off. Enemies always need one open route.';m.appendChild(d);}
   for(const k of Object.keys(STRUCTURES)){
    const T=STRUCTURES[k];
    const free=k==='scan'&&st.freeScan>0;
    const allowed=T.allowedTerrain.includes(c.terrain);
-   let dis=!free&&!afford(k);if(!allowed)dis=true;
+   let dis=!free&&!afford(k);if(!allowed||seals)dis=true;
    let sub=null;
-   if(!allowed)sub=[T.blockedHint||'not on this hex',1];
+   if(seals)sub=['would seal the castle',1];
+   else if(!allowed)sub=[T.blockedHint||'not on this hex',1];
    else if(T.terrainNote&&T.terrainNote[c.terrain])sub=[T.terrainNote[c.terrain]];
-   else if(T.terrainBonus&&T.terrainBonus.terrain===c.terrain)sub=['+'+Math.round((T.terrainBonus.damage-1)*100)+'% on this hex'];
+   else if(T.terrainBonus&&T.terrainBonus.terrain===c.terrain)sub=['+'+Math.round((T.terrainBonus.damage-1)*100)+'% on this hex'+(T.counters?'; good vs '+T.counters:'')];
+   else if(T.counters)sub=['good vs '+T.counters,2];
    const ic='b:'+k+':'+(allowed?c.terrain:T.allowedTerrain[0]);
    menuBtn(m,ic,T.name,sub,costEl(costOf(k),free),()=>build(c,k),dis,T.description);
   }
@@ -89,6 +96,28 @@ export function renderTech(){
  el.querySelectorAll('.nd').forEach(b=>b.onclick=()=>buyTech(b.dataset.id));
 }
 
+// ---- "new enemy" cards: shown in the build phase before a wave that introduces a type
+export function showIntro(){
+ if(st.phase!=='build'||st.over)return;
+ const fresh=newTypes(st.wave).filter(t=>!st.seen[t]);
+ if(!fresh.length)return;
+ fresh.forEach(t=>st.seen[t]=1);
+ const el=$('intro');
+ let h='<div class="card"><div class="ih">'+(fresh.length>1?'New enemies':'New enemy')+' next wave</div>';
+ for(const t of fresh){const T=ENEMIES[t];
+  h+='<div class="en"><span class="ei">'+icoHTML('e:'+t,64)+'</span><div><b>'+T.name+'</b><p>'+T.intro+'</p><p class="ct"><span>Counter:</span> '+T.counter+'</p></div></div>';}
+ h+='<button id="ix" class="go">Got it</button></div>';
+ el.innerHTML=h;el.style.display='flex';
+ $('ix').onclick=()=>{el.style.display='none';};
+}
+// small HTML for "next wave" preview: icon + count per type
+function preview(w){
+ const comp=waveComposition(w);let h='';
+ for(const t of Object.keys(ENEMIES))if(comp[t]){const T=ENEMIES[t];const n=comp[t]*(T.pack||1);
+  h+='<span class="pv'+(T.firstWave===w?' nw':'')+'" title="'+T.name+'">'+icoHTML('e:'+t,22)+n+'</span>';}
+ return h;
+}
+
 // ---- HUD
 export function hud(){
  $('rg').textContent=st.gold;$('rw').textContent=st.wood;$('rs').textContent=st.stone;$('rc').textContent=st.crystal;
@@ -98,8 +127,11 @@ export function hud(){
  let h;
  if(st.over)h='The castle has fallen.';
  else if(st.phase==='wave')h='Wave in progress: building and selling are only possible in the build phase. Tap a tower to see its range.';
- else{h='Build phase: tap a hex to build. Drag to pan, wheel/pinch to zoom. Spend research points under Tech. Enemies come from all sides.';
+ else{h='Build phase: tap a hex to build. Enemies walk around your buildings, so use cheap walls to make their route long. The dotted lines show their current routes.';
   if(st.freeScan>0)h+=' You have 1 free scan tower.';}
  const hv=view.hover||view.sel;if(hv&&hv.revealed&&!st.over)h+='  ['+hv.terrain+']';
- if($('hint').textContent!==h)$('hint').textContent=h;
+ let html='<span class="ht"></span>';
+ if(!st.over&&st.phase==='build')html='<span class="nx">Next wave'+(st.wave%BOSS_EVERY===0?' <b class="bs">BOSS</b>':'')+': '+preview(st.wave)+'</span>'+html;
+ const kk=h+'|'+st.wave+st.phase;
+ if(hud.k!==kk){hud.k=kk;$('hint').innerHTML=html;$('hint').querySelector('.ht').textContent=h;}
 }

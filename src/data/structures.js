@@ -19,10 +19,16 @@
 //  slow           { duration: seconds, factor: speed multiplier while slowed }
 //  terrainBonus   { terrain, damage: multiplier, slowDuration: multiplier } when built on that terrain
 //  upgrade        { cost, damageMult, slowDurationMult, text } one upgrade level
+//  pierce         true: ignores enemy armor
+//  hitsAir        false: cannot target flying enemies (default true)
+//  targeting      'first' (closest to the castle, default) or 'priority' (shamans/bosses first,
+//                 then the toughest enemy in range)
+//  counters       short "good against" line for the build menu
 //  --- other ---
 //  yield          harvester income per wave, per terrain
 //  revealPerWave  scan tower: hexes revealed after every wave
-//  blocksPath     enemies must destroy it to pass (walls); pathCost is its weight when no path exists
+//  blocksPath     drawn as a wall segment (every structure blocks enemies, see src/path.js)
+//  pathCost       how reluctant a cut-off enemy is to break through it (default 4)
 
 const ANY = ['plain', 'wood', 'stone', 'crystal'];
 
@@ -45,7 +51,8 @@ export const STRUCTURES = {
   },
   archer: {
     id: 'archer', name: 'Archer tower', icon: 'archer',
-    description: 'fast, range 5; wood hex +50%',
+    description: 'fast, range 5, hits flyers; wood hex +50%',
+    counters: 'runners, bats',
     cost: { gold: 10, wood: 5 }, hp: 40, sight: 1,
     allowedTerrain: ANY,
     range: 5, damage: 5, cooldown: 0.45,
@@ -56,7 +63,9 @@ export const STRUCTURES = {
   },
   cat: {
     id: 'cat', name: 'Catapult', icon: 'cat',
-    description: 'splash, range 6; stone hex +50%',
+    description: 'splash, range 6, ground only; stone hex +50%',
+    counters: 'swarms, armor',
+    hitsAir: false,
     cost: { gold: 15, stone: 5 }, hp: 40, sight: 1,
     allowedTerrain: ANY,
     range: 6, damage: 14, cooldown: 2.0,
@@ -68,7 +77,9 @@ export const STRUCTURES = {
   },
   mage: {
     id: 'mage', name: 'Mage tower', icon: 'mage',
-    description: 'slows enemies, range 4; crystal hex +50%',
+    description: 'slows, pierces armor, range 4; crystal hex +50%',
+    counters: 'brutes, runners',
+    pierce: true,
     cost: { gold: 15, crystal: 4 }, hp: 35, sight: 1,
     allowedTerrain: ANY,
     range: 4, damage: 3, cooldown: 1.1,
@@ -78,10 +89,23 @@ export const STRUCTURES = {
     terrainBonus: { terrain: 'crystal', damage: 1.5, slowDuration: 1.5 },
     upgrade: { cost: { gold: 10, crystal: 3 }, damageMult: 1.6, slowDurationMult: 1.5, text: '+60% dmg, +50% slow' },
   },
+  ballista: {
+    id: 'ballista', name: 'Ballista', icon: 'ballista',
+    description: 'huge range 8, pierces armor, shoots shamans and bosses first',
+    counters: 'shamans, bosses',
+    cost: { gold: 25, wood: 5, stone: 5 }, hp: 45, sight: 1,
+    allowedTerrain: ANY,
+    range: 8, damage: 28, cooldown: 2.6, pierce: true, targeting: 'priority',
+    projectile: { kind: 'spear', flight: 0.35 },
+    recoilDecay: 1.2,
+    terrainBonus: { terrain: 'stone', damage: 1.3 },
+    upgrade: { cost: { gold: 20, stone: 5 }, damageMult: 1.6, text: '+60% dmg' },
+  },
   wall: {
     id: 'wall', name: 'Wall', icon: 'wall',
-    description: 'blocks enemies',
-    cost: { wood: 3 }, hp: 60, sight: 1,
+    description: 'cheap; enemies walk around it. Build a maze!',
+    counters: 'all walkers (longer route, more shots)',
+    cost: { gold: 2 }, hp: 60, sight: 1,
     allowedTerrain: ANY,
     blocksPath: true, pathCost: 6,
   },

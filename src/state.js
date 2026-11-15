@@ -8,7 +8,8 @@ import { START_RESOURCES, FREE_SCAN_TOWERS } from './data/waves.js';
 import { $ } from './dom.js';
 import { reveal, generateMap } from './map.js';
 import { cam, updS } from './camera.js';
-import { closeMenu, closeTech, renderTech } from './ui.js';
+import { closeMenu, closeTech, renderTech, showIntro } from './ui.js';
+import { wouldSeal } from './path.js';
 
 export const st = {};                 // game state (see newGame for the fields)
 export const cells = new Map();       // 'q,r' -> cell
@@ -32,9 +33,10 @@ export function newGame() {
  for (const k of Object.keys(st)) delete st[k];
  Object.assign(st, { gold: START_RESOURCES.gold, wood: START_RESOURCES.wood, stone: START_RESOURCES.stone, crystal: START_RESOURCES.crystal,
   rp: 0, tech: {}, maxhp: CASTLE.maxHp, shake: 0, fx: [], coins: [], hp: CASTLE.maxHp, wave: 1, phase: 'build', freeScan: FREE_SCAN_TOWERS,
-  enemies: [], projs: [], floats: [], queue: [], spawnT: 0, a0: 0, spawnN: 0, speed: 1, over: false, flash: 0, time: 0 });
+  enemies: [], projs: [], seen: {}, banner: null, floats: [], queue: [], spawnT: 0, a0: 0, spawnN: 0, speed: 1, over: false, flash: 0, time: 0 });
  view.sel = null; view.hover = null; closeMenu(); closeTech(); $('over').style.display = 'none';
  cam.x = 0; cam.y = 0; cam.z = 1; world.pathDirty = true; updS();
+ showIntro();
 }
 
 // ---- costs
@@ -57,6 +59,7 @@ export function build(c, t) {
  if (!c || !c.revealed || c.b || c.terrain === 'castle') return false;
  const T = STRUCTURES[t];
  if (!T.allowedTerrain.includes(c.terrain)) return false;
+ if (wouldSeal(c)) { flt(c, 'would seal the castle!', '#f88'); return false; }
  let free = false;
  if (t === 'scan' && st.freeScan > 0) free = true; else if (!afford(t)) return false;
  const sp = { gold: 0, wood: 0, stone: 0, crystal: 0 };

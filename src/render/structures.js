@@ -53,6 +53,31 @@ export function dArcher(b){
  G.restore();
  if(b&&b.upg)upgMark();
 }
+export function dBallista(b){
+ const fk=(b&&b.fk)||0,aim=(b&&b.aim!=null)?b.aim:-.5;
+ shadow(.7,.22,.06,.56);
+ poly([-.54,.52,-.42,.04,.42,.04,.54,.52],K('#8f8c85'),OL);bricks(-.4,.08,.8,.44,3,5);
+ G.fillStyle='rgba(0,0,0,.22)';G.fillRect(.22,.04,.22,.48);
+ rect(-.5,-.02,1.0,.1,K('#6f4a28'),OL);
+ for(const sx of [-1,1]){poly([sx*.4,.02,sx*.26,.02,sx*.06,-.34,sx*.18,-.34],K('#a1713f'),OL);}
+ line(-.3,.0,.3,-.3,'#5a381a',LW*1.3);
+ rect(-.12,-.4,.24,.1,K('#6f4a28'),OL);
+ circ(0,-.42,.1,K('#555c66'),OL);
+ G.save();G.translate(0,-.42);G.rotate(aim);
+ const rc=fk*.12;G.translate(-rc,0);
+ // stock
+ rect(-.34,-.07,.9,.14,K('#a1713f'),OL);rect(-.34,-.07,.9,.04,'rgba(255,255,255,.2)',null);
+ rect(-.42,-.1,.12,.2,K('#555c66'),OL);
+ // limbs
+ const sp=.52,pull=(1-Math.min(1,fk*1.2))*.14;
+ G.beginPath();G.moveTo(.2,-.06);G.quadraticCurveTo(.3,-sp*.8,.14-.0,-sp);G.lineTo(.2,-sp-.02);G.quadraticCurveTo(.4,-sp*.8,.3,-.06);G.closePath();fillS(K('#6f4a28'),OL);
+ G.beginPath();G.moveTo(.2,.06);G.quadraticCurveTo(.3,sp*.8,.14,sp);G.lineTo(.2,sp+.02);G.quadraticCurveTo(.4,sp*.8,.3,.06);G.closePath();fillS(K('#6f4a28'),OL);
+ G.beginPath();G.moveTo(.17,-sp);G.lineTo(.17-pull-.14,0);G.lineTo(.17,sp);G.strokeStyle='rgba(255,255,255,.85)';G.lineWidth=LW*.7;G.lineCap='round';G.stroke();
+ if(fk<.45){line(.17-pull-.14,0,.72,0,K('#4a3a22'),LW*1.6);poly([.72,-.07,.92,0,.72,.07],K('#cfd4da'),OL);poly([.3,-.04,.4,-.08,.4,.08,.3,.04],K('#c8402e'),OL);}
+ circ(.12,0,.05,K('#cfd4da'),OL);
+ G.restore();
+ if(b&&b.upg){rect(-.5,-.05,1.0,.06,'#ffd84a','#8a5a00');upgMark();}
+}
 export function dCat(b){
  const fk=(b&&b.fk)||0,dir=(b&&b.dx)||1;
  shadow(.7,.2,.05,.54);
@@ -164,6 +189,7 @@ export function dWall(b,wm){
 // Each drawer is called in unit space with the context already translated and scaled.
 const STRUCTURE_ART = {
   archer: (b, terr, wm) => dArcher(b),
+  ballista: (b, terr, wm) => dBallista(b),
   cat:    (b, terr, wm) => dCat(b),
   mage:   (b, terr, wm) => dMage(b),
   scan:   (b, terr, wm) => dScan(b),

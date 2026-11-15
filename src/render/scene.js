@@ -1,10 +1,11 @@
 // Draws one frame: tiles and fog, structures, range rings, enemies, then the effect layers.
 import { W2, ANG } from '../hex.js';
 import { ctx } from '../dom.js';
-import { st, cellList, view, isTower } from '../state.js';
+import { st, cellList, view, isTower, world } from '../state.js';
 import { L, scr } from '../camera.js';
 import { trange } from '../combat.js';
 import { ENEMIES } from '../data/enemies.js';
+import { STRUCTURES } from '../data/structures.js';
 import { TAU, NOW, lwu, setG, setNOW, setLW } from './prims.js';
 import { dCastle, drawBuilding } from './structures.js';
 import { ebar, dEnemy } from './enemies.js';
@@ -19,6 +20,9 @@ function bar(x,y,w,f,col){
  f=Math.max(0,f);ctx.fillStyle=f>.6?'#5fd35f':f>.3?'#e8c840':'#e85a4a';ctx.fillRect(x-w/2,y,w*f,h);
  ctx.fillStyle='rgba(255,255,255,.3)';ctx.fillRect(x-w/2,y,w*f,Math.max(1,h*.3));
 }
+// rim colour of a built hex, by kind (see the legend in the "Show built" toggle)
+export const PLATE={tower:'#ff8a4a',wall:'#cfc6b4',harv:'#8fe06a',scan:'#6ab8ff'};
+function plateColor(b){const T=STRUCTURES[b.type];return T.damage?PLATE.tower:T.blocksPath?PLATE.wall:T.yield?PLATE.harv:PLATE.scan;}
 const edges=[],blist=[];
 export function draw(){
  const S=L.S;ctx.setTransform(L.dpr,0,0,L.dpr,0,0);setG(ctx);setNOW(performance.now()/1000);setLW(lwu(S));
@@ -52,6 +56,20 @@ export function draw(){
    ctx.strokeStyle='rgba(4,6,12,'+al*2+')';ctx.lineWidth=S*lw;ctx.lineCap='butt';ctx.stroke();}
  }
  for(let j=0;j<hot.length;j+=3){hexPath(hot[j],hot[j+1],S*.94);ctx.strokeStyle='rgba(255,255,255,'+Math.min(1,hot[j+2])+')';ctx.lineWidth=3;ctx.stroke();}
+ // enemy routes (the maze) during the build phase: dotted lines from the spawn ring to the castle
+ if(st.phase==='build'&&world.routes){
+  ctx.save();ctx.setLineDash([S*.12,S*.22]);ctx.lineDashOffset=-NOW*S*.6;ctx.lineCap='round';ctx.lineJoin='round';
+  for(const [w,col] of [[S*.16,'rgba(0,0,0,.35)'],[S*.07,'rgba(255,120,90,.75)']]){ctx.lineWidth=w;ctx.strokeStyle=col;
+   for(const rt of world.routes){ctx.beginPath();rt.forEach((c,i)=>{const p=W2(c.q,c.r),s=scr(p.x,p.y);i?ctx.lineTo(s.x,s.y):ctx.moveTo(s.x,s.y);});ctx.stroke();}}
+  ctx.restore();
+ }
+ // built hexes: a dark foundation plate with a rim coloured by kind, so built vs empty is obvious.
+ // With "Show built" on, every empty hex is dimmed as well.
+ if(view.showBuilt){ctx.fillStyle='rgba(6,8,14,.62)';
+  for(const c of cellList){if(!c.revealed||c.b||c.terrain==='castle')continue;const p=W2(c.q,c.r),s=scr(p.x,p.y);if(!vis(s))continue;hexPath(s.x,s.y,S*.97);ctx.fill();}}
+ for(const c of blist){if(!c.b)continue;const p=W2(c.q,c.r),s=scr(p.x,p.y);
+  hexPath(s.x,s.y,S*.9);ctx.fillStyle='rgba(20,26,40,.42)';ctx.fill();
+  hexPath(s.x,s.y,S*.86);ctx.strokeStyle=plateColor(c.b);ctx.lineWidth=Math.max(2,S*(view.showBuilt?.13:.08));ctx.stroke();}
  // buildings (back to front)
  blist.sort((a,b)=>a.r-b.r);
  for(const c of blist){const b=c.b,p=W2(c.q,c.r),s=scr(p.x,p.y);
@@ -77,4 +95,6 @@ export function draw(){
  drawFx(S);
  drawCoins(S);
  drawFloats(S);
+ if(st.banner){const b=st.banner,a=Math.min(1,b.t*3,(2.5-b.t)*2);ctx.globalAlpha=Math.max(0,a);ctx.textAlign='center';ctx.font='900 '+Math.max(22,Math.min(44,L.w*.06))+'px system-ui';
+  ctx.lineWidth=6;ctx.strokeStyle='#000';ctx.strokeText(b.txt,L.w/2,L.h*.2);ctx.fillStyle='#ff6a4a';ctx.fillText(b.txt,L.w/2,L.h*.2);ctx.globalAlpha=1;}
 }

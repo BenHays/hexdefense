@@ -1,10 +1,10 @@
 // Entry point: boots the game, runs the frame loop and exposes `window.game` for debugging/tests.
 import { key, W2 } from './hex.js';
-import { cells, st, has, costOf, techState, build, upgrade, sell, newGame, buyTech } from './state.js';
+import { cells, world, st, has, costOf, techState, build, upgrade, sell, newGame, buyTech } from './state.js';
 import { resize, cam, scr } from './camera.js';
 import { cv } from './dom.js';
 import { update, tdmg, rangeHex } from './combat.js';
-import { startWave, spawnRing } from './waves.js';
+import { startWave, spawnRing, waveComposition } from './waves.js';
 import { draw } from './render/scene.js';
 import { hud, bindUI, openTech, closeTech } from './ui.js';
 import { initInput } from './input.js';
@@ -26,4 +26,4 @@ window.game = { st: () => st, cells: () => cells, cam: () => cam, build: (q, r, 
  sell: (q, r) => sell(cells.get(key(q, r))), start: startWave,
  step: (sec) => { const n = Math.ceil(sec / .033); for (let i = 0; i < n; i++) update(sec / n); },
  screen: (q, r) => { const p = W2(q, r), s = scr(p.x, p.y), b = cv.getBoundingClientRect(); return { x: b.left + s.x, y: b.top + s.y }; },
- spawnRing, waveCount, hpMult, newGame, buyTech, openTech, closeTech, has, costOf, techState, tdmg: (q, r) => tdmg(cells.get(key(q, r))), rangeHex: (q, r) => rangeHex(cells.get(key(q, r)).b), TECH };
+ spawnRing, waveCount, hpMult, waveComposition, world: () => world, newGame, buyTech, openTech, closeTech, has, costOf, techState, tdmg: (q, r) => tdmg(cells.get(key(q, r))), rangeHex: (q, r) => rangeHex(cells.get(key(q, r)).b), TECH };

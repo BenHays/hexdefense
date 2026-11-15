@@ -9,8 +9,9 @@ research points on tech.
 - Open `dist/hexkeep.html` in a browser (double-click it; it works from `file://`).
 - **Build phase:** tap/click a revealed hex to open the build menu (build, upgrade, sell). Drag to pan,
   wheel or pinch to zoom, "Center" recentres the camera. Your first Scan tower is free.
-- Press **Start Wave**. Enemies arrive from all sides and walk to the castle; towers shoot them,
-  walls block them (they must chew through). Building and selling are only possible between waves.
+- Press **Start Wave**. Enemies arrive from all sides and walk to the castle around your buildings
+  (every structure blocks them, so walls build a maze; a build that would seal the castle is refused).
+  Bats fly over the maze. Towers shoot them. Building and selling are only possible between waves.
 - After each wave you get gold, harvester resources and 1 research point for the **Tech** panel.
 - Towers get +50% on their matching terrain (archer on wood, catapult on stone, mage on crystal).
   Harvesters only work on wood, stone and crystal hexes. The game ends when the castle HP hits 0.
@@ -54,9 +55,10 @@ All balance numbers live in `src/data/`. Edit, run `node tools/build.mjs` (or ju
 - Starting castle HP/sight and the sell refund are exported from the same file.
 
 ### Enemies (`src/data/enemies.js`)
-`hp`, `speed`, `dmg` (vs structures), `castleDmg`, `bounty`, `firstWave`, `chance`, size and colours.
-`ENEMY_PICK_ORDER` decides which type is tried first when a wave is filled. New look = new drawer in
-`ENEMY_ART` (`src/render/enemies.js`); otherwise reuse an existing `art` id.
+`hp`, `speed`, `armor`, `flying`, `heal`, `pack`, `boss`, `dmg` (vs structures), `castleDmg`, `bounty`,
+`firstWave`, `share` (how much of a wave it takes), `intro`/`counter` (the new-enemy card), size and colours.
+Wave make-up is `waveComposition` in `src/waves.js`, tuned by the constants at the end of `src/data/waves.js`.
+New look = new drawer in `ENEMY_ART` (`src/render/enemies.js`); otherwise reuse an existing `art` id.
 
 ### Tech (`src/data/tech.js`)
 Nodes have `cost`, `requires`, `txt` and an `effect` object (`damageMult`, `rangeBonus`, `costMult`, ...;

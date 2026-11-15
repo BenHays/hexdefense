@@ -18,22 +18,35 @@ Hexkeep is an original hex-board castle defense game. You explore outward from a
   - Crystal comes from harvesters on crystal hexes, which only appear 6 or more hexes from the castle.
 - **Structures:** scan tower, harvester, archer, catapult, mage (slows), wall, and one upgrade per tower. A tower built on its matching resource hex is 50% stronger, but that hex never pays out.
 - **Vision:** the castle and scan towers see 2 hexes out, and other buildings see 1. Each scan tower also reveals its 2 nearest hidden hexes after each wave.
-- **Enemies:** grunt, runner (from wave 4) and brute (from wave 7). They spawn just outside the fog on all sides.
+- **Enemies are questions, towers are answers.** A new type joins every wave or two, with a card that says what it does and what counters it. Enemies spawn just outside the fog on all sides.
+
+  | Enemy | From wave | What it does | Counter |
+  |---|---|---|---|
+  | Grunt | 1 | Walks the shortest open route | Anything; make the route long |
+  | Runner | 3 | Very fast, fragile | Archer (fast fire), Mage (slow) |
+  | Swarmlings | 5 | Packs of four tiny enemies | Catapult splash |
+  | Warlord (boss) | 5, 10, 15... | Huge HP, armor 2, 4 castle damage | Everything, Ballista |
+  | Armored Brute | 7 | Armor 4: each hit loses 4 damage (min 1) | Mage and Ballista pierce armor; Catapult hits hard |
+  | Bat | 9 | Flies straight over the maze | Archer, Mage, Ballista (Catapult can't hit air) |
+  | Shaman | 11 | Heals enemies near it | Ballista (range 8, shoots shamans and bosses first) |
+
+- **Towers:** Archer (fast, hits air), Catapult (splash, ground only), Mage (slows, pierces armor), Ballista (huge range, pierces armor, priority targeting), Wall (2 gold).
+- **Mazing (built 2026-11-15):** every structure blocks enemies on foot, so they walk around your buildings and re-route when something is built or destroyed. During the build phase dotted lines show the current routes. A build that would leave no open trail from the map edge to the castle is refused, and the build menu says so. An enemy that is somehow cut off (for example spawned in a pocket) breaks through the cheapest structures.
+- **Built hexes** get a dark plate with a rim coloured by kind (towers orange, walls stone, harvesters green, scan towers blue). The "Show built" button dims every empty hex and shows a legend.
+- **Wave preview:** the bottom bar shows the next wave's enemies; new types glow.
 - **Tech:** you earn 1 point per wave. There are three branches (Economy, Defense, Vision) with three nodes each.
 
 ## Decided, not built yet
 
 These were agreed with Ben on 2026-11-13. Check with him before building them.
 
-1. **Mazing.** Enemies walk around every structure, not just walls, taking the shortest open route to the castle. They re-route whenever something is built or destroyed. The game rewards shaping a path with your buildings.
-2. **No total blocks.** A build is refused if it would leave no open trail from the map edge to the castle. The rule is at least one trail in total, not one per side, so funneling enemies is allowed. The check is a breadth-first search from the castle, run before each placement.
-3. **Start small, unlock through tech.** A run starts with the castle, a scan tower, a harvester and one basic tower. Catapults, mages, walls and upgrades are unlocked in the tech tree, so new options arrive one at a time.
+1. **Start small, unlock through tech.** A run starts with the castle, a scan tower, a harvester and one basic tower. Catapults, mages, walls and upgrades are unlocked in the tech tree, so new options arrive one at a time.
 
 ## Open ideas (not decided)
 
 - Monster nests uncovered by scans, which spawn extra enemies until destroyed.
 - Adjacency bonuses, for example a tower next to a wall, or harvesters side by side.
-- A flying enemy that ignores the maze, so mazing isn't the only strategy.
+- Tower upgrade paths with a choice (Bloons style), coin drops, early-call bonus, more juice.
 - A win condition (survive N waves), star ratings and scores.
 - Save data and unlocks between runs.
 

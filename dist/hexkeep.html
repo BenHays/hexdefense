@@ -106,6 +106,7 @@ button.pulse{border-color:#f1c84b;box-shadow:0 0 10px #f1c84bbb,inset 0 1px 0 #f
 #intro .en p{margin:3px 0;color:#c8cede;font-size:13px}
 #intro .ct span{color:#8fe08f;font-weight:700}
 #intro button{width:100%;margin-top:6px}
+#rst.arm{background:linear-gradient(#a04a3a,#6e2e24);border-color:#ff8a7a}
 </style>
 </head><body>
 <div id="app">
@@ -113,7 +114,7 @@ button.pulse{border-color:#f1c84b;box-shadow:0 0 10px #f1c84bbb,inset 0 1px 0 #f
   <span class="logo">HEXKEEP</span>
   <span class="rs g" title="Gold"><i data-ic="gold"></i><span class="lb">Gold</span><b id="rg"></b></span><span class="rs w" title="Wood"><i data-ic="wood"></i><span class="lb">Wood</span><b id="rw"></b></span><span class="rs s" title="Stone"><i data-ic="stone"></i><span class="lb">Stone</span><b id="rs"></b></span><span class="rs c" title="Crystal"><i data-ic="crystal"></i><span class="lb">Crystal</span><b id="rc"></b></span>
   <span class="rs h" title="Castle HP"><i data-ic="heart"></i><span class="lb">Castle</span><b id="hp"></b></span><span class="rs wvc" title="Wave"><i data-ic="flag"></i><span class="lb">Wave</span><b id="wv"></b></span>
-  <button id="go" class="go"></button><button id="sp">Speed 1x</button><button id="tb">Tech</button>
+  <button id="go" class="go"></button><button id="sp">Speed 1x</button><button id="tb">Tech</button><button id="rst" title="Start a new game">Restart</button>
  </div>
  <div id="wrap"><canvas id="c"></canvas><div id="cbtns"><button id="vb">Show built</button><button id="ctr">Center</button></div><div id="legend"></div><div id="menu"></div><div id="tech"></div><div id="intro"></div>
   <div id="over"><h1>Castle fallen</h1><div id="overt" style="font-size:18px"></div><button id="re" class="go">Restart</button></div></div>
@@ -1507,6 +1508,10 @@ function bindUI(){
  $('go').onclick=startWave;
  $('sp').onclick=()=>{st.speed=st.speed===1?2:1;};
  $('re').onclick=newGame;
+ // Restart asks for a second tap (popups can be blocked where the game is embedded)
+ let arm=0;const rb=$('rst');
+ rb.onclick=()=>{if(arm||st.over){clearTimeout(arm);arm=0;rb.textContent='Restart';rb.classList.remove('arm');newGame();return;}
+  rb.textContent='Tap again to restart';rb.classList.add('arm');arm=setTimeout(()=>{arm=0;rb.textContent='Restart';rb.classList.remove('arm');},3000);};
  $('ctr').onclick=()=>{cam.x=0;cam.y=0;};
  $('legend').innerHTML=[['tower','Towers'],['wall','Walls'],['harv','Harvesters'],['scan','Scan towers']].map(([k,n])=>'<span><i style="border-color:'+PLATE[k]+'"></i>'+n+'</span>').join('');
  $('vb').onclick=()=>{view.showBuilt=!view.showBuilt;$('vb').classList.toggle('on',view.showBuilt);$('legend').classList.toggle('on',view.showBuilt);};
